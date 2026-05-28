@@ -1,0 +1,125 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# =========================
+# Django
+# =========================
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Media & Static
+media/
+staticfiles/
+
+# Django migrations
+**/migrations/*.py
+!**/migrations/__init__.py
+
+# =========================
+# Environment Variables
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# IDEs & Editors
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# OS Files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Pytest / Coverage
+# =========================
+.pytest_cache/
+.coverage
+htmlcov/
+
+# =========================
+# Jupyter Notebook
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+
+# =========================
+# Dataset Files
+# =========================
+datasets/raw/
+datasets/temp/
+
+# Ignore generated datasets
+*.csv
+*.xlsx
+
+# Keep sample datasets
+!datasets/sample/
+
+# =========================
+# Docker
+# =========================
+*.pid
+docker-compose.override.yml
+
+# =========================
+# Build / Distribution
+# =========================
+build/
+dist/
+*.egg-info/
+
+# =========================
+# PostgreSQL
+# =========================
+*.dump
+
+# =========================
+# ML Models
+# =========================
+*.pkl
+*.joblib
+models/
+
+# =========================
+# Cache
+# =========================
+.cache/
+
+# =========================
+# Celery
+# =========================
+celerybeat-schedule
+
+# =========================
+# Node (por si agregas frontend JS)
+# =========================
+node_modules/
+
+# =========================
+# Temporary files
+# =========================
+tmp/
+temp/
