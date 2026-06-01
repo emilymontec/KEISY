@@ -1,5 +1,5 @@
 """
-URL configuration for KEISY project.
+URL configuration for keisy project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/6.0/topics/http/urls/
@@ -22,6 +22,10 @@ from drf_spectacular.views import (
     SpectacularSwaggerView
 )
 
+admin.site.site_header = "Keisy Medical Control"
+admin.site.site_title = "Keisy Admin"
+admin.site.index_title = "Panel administrativo medico"
+
 urlpatterns = [
 
     path('admin/', admin.site.urls),
@@ -39,4 +43,5 @@ urlpatterns = [
         SpectacularSwaggerView.as_view(url_name='schema'),
         name='swagger-ui'
     ),
+    path('', include('etl.urls')),
 ]

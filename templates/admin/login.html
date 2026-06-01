@@ -1,0 +1,63 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+body.login {
+    background:
+        radial-gradient(circle at top left, rgba(0, 171, 189, 0.2), transparent 28%),
+        radial-gradient(circle at top right, rgba(221, 68, 150, 0.16), transparent 22%),
+        #f4f8fc;
+}
+
+#content {
+    padding: 0;
+}
+
+.submit-row {
+    padding: 0;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="medical-login-shell">
+    <h1>Ingreso administrativo</h1>
+    <p>Accede al panel medico para consultar pacientes y archivos cargados.</p>
+
+    {% if form.errors and not form.non_field_errors %}
+        <p class="errornote">
+            {% if form.errors.items|length == 1 %}
+                {% translate "Please correct the error below." %}
+            {% else %}
+                {% translate "Please correct the errors below." %}
+            {% endif %}
+        </p>
+    {% endif %}
+
+    {% if form.non_field_errors %}
+        {% for error in form.non_field_errors %}
+            <p class="errornote">{{ error }}</p>
+        {% endfor %}
+    {% endif %}
+
+    <form action="{{ app_path }}" method="post" id="login-form">
+        {% csrf_token %}
+        <div class="form-row mb-3">
+            {{ form.username.errors }}
+            {{ form.username.label_tag }}
+            {{ form.username }}
+        </div>
+        <div class="form-row mb-4">
+            {{ form.password.errors }}
+            {{ form.password.label_tag }}
+            {{ form.password }}
+            <input type="hidden" name="next" value="{{ next }}">
+        </div>
+        <div class="submit-row">
+            <input type="submit" value="{% translate 'Log in' %}">
+        </div>
+    </form>
+</div>
+{% endblock %}

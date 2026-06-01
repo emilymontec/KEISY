@@ -1,0 +1,19 @@
+{% extends "admin/index.html" %}
+
+{% block content %}
+<div class="medical-admin-card-grid">
+    <div class="medical-admin-card">
+        <h3>Login institucional</h3>
+        <p>Ingreso centralizado para el personal autorizado.</p>
+    </div>
+    <div class="medical-admin-card secondary">
+        <h3>Archivos cargados</h3>
+        <p>Consulta el historial ETL, estado del proceso y volumen insertado.</p>
+    </div>
+    <div class="medical-admin-card highlight">
+        <h3>Registros guardados</h3>
+        <p>Filtra pacientes por riesgo, sexo y fecha desde el panel.</p>
+    </div>
+</div>
+{{ block.super }}
+{% endblock %}
