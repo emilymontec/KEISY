@@ -53,3 +53,30 @@ class Patient(models.Model):
 
     def __str__(self):
         return f"{self.nombres} {self.apellidos}"
+
+    def get_alerts(self):
+        alerts = []
+        if self.glucosa > 300:
+            alerts.append({'type': 'CRITICO', 'msg': f'Glucosa crítica: {self.glucosa} mg/dL'})
+        elif self.glucosa > 200:
+            alerts.append({'type': 'ALTO', 'msg': f'Glucosa elevada: {self.glucosa} mg/dL'})
+
+        if self.presion_sistolica > 180:
+            alerts.append({'type': 'CRITICO', 'msg': f'Crisis hipertensiva: {self.presion_sistolica}/{self.presion_diastolica}'})
+        elif self.presion_sistolica > 140:
+            alerts.append({'type': 'ALTO', 'msg': f'Hipertensión detectada: {self.presion_sistolica}/{self.presion_diastolica}'})
+
+        if self.saturacion_oxigeno < 85:
+            alerts.append({'type': 'CRITICO', 'msg': f'Hipoxia severa: {self.saturacion_oxigeno}% SpO2'})
+        elif self.saturacion_oxigeno < 90:
+            alerts.append({'type': 'ALTO', 'msg': f'Saturación baja: {self.saturacion_oxigeno}% SpO2'})
+
+        if self.frecuencia_cardiaca > 120:
+            alerts.append({'type': 'ALTO', 'msg': f'Taquicardia: {self.frecuencia_cardiaca} lpm'})
+        elif self.frecuencia_cardiaca < 50:
+            alerts.append({'type': 'ALTO', 'msg': f'Bradicardia: {self.frecuencia_cardiaca} lpm'})
+
+        if self.imc > 35:
+            alerts.append({'type': 'MEDIO', 'msg': f'Obesidad grado II/III: IMC {self.imc}'})
+
+        return alerts

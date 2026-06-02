@@ -69,6 +69,53 @@ def home(request):
 
 
 @login_required
+def alert_center(request):
+    # Obtener todos los pacientes con riesgo alto o crítico para las alertas iniciales
+    all_patients = Patient.objects.all()
+    
+    patient_alerts = []
+    for patient in all_patients:
+        alerts = patient.get_alerts()
+        if alerts:
+            # Priorizar por el tipo más severo de alerta que tenga el paciente
+            severity_order = {'CRITICO': 3, 'ALTO': 2, 'MEDIO': 1}
+            max_severity = max([severity_order.get(a['type'], 0) for a in alerts])
+            
+            patient_alerts.append({
+                'patient': patient,
+                'alerts': alerts,
+                'max_severity': max_severity
+            })
+    
+    # Ordenar por severidad (Crítico primero)
+    patient_alerts.sort(key=lambda x: x['max_severity'], reverse=True)
+    
+    # Top 10 pacientes para atención inmediata
+    # Criterio: Riesgo CRITICO > ALTO, luego por número de alertas, luego por fecha creación
+    top_10_patients = Patient.objects.filter(riesgo__in=['CRITICO', 'ALTO']).order_by(
+        '-riesgo', # Esto funciona si el orden alfabético coincide o si usamos un Case/When
+    )[:10]
+    
+    # Mejora del ordenamiento del Top 10 con Case/When para asegurar CRITICO > ALTO
+    from django.db.models import Case, When, Value, IntegerField
+    top_10_patients = Patient.objects.annotate(
+        priority=Case(
+            When(riesgo='CRITICO', then=Value(3)),
+            When(riesgo='ALTO', then=Value(2)),
+            When(riesgo='MEDIO', then=Value(1)),
+            default=Value(0),
+            output_field=IntegerField(),
+        )
+    ).filter(priority__gt=0).order_by('-priority', '-created_at')[:10]
+
+    context = {
+        'patient_alerts': patient_alerts,
+        'top_10_patients': top_10_patients,
+    }
+    return render(request, 'views/alert_center.html', context)
+
+
+@login_required
 def admin_panel(request):
     search_query = request.GET.get("q", "").strip()
     risk_filter = request.GET.get("risk", "").strip().upper()

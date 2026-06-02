@@ -220,6 +220,9 @@
                             <a class="nav-link {% if request.resolver_match.url_name == 'admin_panel' %}active{% endif %}" href="{% url 'admin_panel' %}">Panel Clínico</a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'alert_center' %}active{% endif %}" href="{% url 'alert_center' %}">Alertas</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.url_name == 'clinical_analytics' %}active{% endif %}" href="{% url 'clinical_analytics' %}">Analítica</a>
                         </li>
                         <li class="nav-item">

@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Keisy Medical | Centro de Alertas{% endblock %}
+
+{% block extra_css %}
+<style>
+    .alert-card {
+        border-radius: 20px;
+        border-left: 8px solid;
+        transition: all 0.3s ease;
+    }
+    .alert-CRITICO { border-left-color: #dc2626; background-color: rgba(220, 38, 38, 0.05); }
+    .alert-ALTO { border-left-color: #ea580c; background-color: rgba(234, 88, 12, 0.05); }
+    .alert-MEDIO { border-left-color: #0697aa; background-color: rgba(6, 151, 170, 0.05); }
+
+    .badge-CRITICO { background-color: #dc2626; }
+    .badge-ALTO { background-color: #ea580c; }
+    .badge-MEDIO { background-color: #0697aa; }
+
+    .top-10-item {
+        border-radius: 15px;
+        border: 1px solid rgba(0,0,0,0.05);
+        margin-bottom: 10px;
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .rank-number {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: var(--primary-dark);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 0.8rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Columna Izquierda: Alertas Automáticas -->
+    <div class="col-lg-8">
+        <div class="card-custom mb-4 border-0">
+            <h5 class="fw-bold mb-4 text-primary-dark d-flex align-items-center">
+                <span class="me-2">🔔</span> Alertas Clínicas Automáticas
+            </h5>
+            
+            <div class="alert-container">
+                {% for item in patient_alerts %}
+                <div class="card alert-card alert-{{ item.alerts.0.type }} mb-3 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h6 class="fw-bold mb-1">
+                                    <a href="{% url 'patient_detail' item.patient.pk %}" class="text-decoration-none text-dark">
+                                        Paciente: {{ item.patient.nombres }} {{ item.patient.apellidos }}
+                                    </a>
+                                </h6>
+                                <small class="text-muted">ID: {{ item.patient.documento|default:item.patient.id }}</small>
+                            </div>
+                            <span class="badge badge-{{ item.alerts.0.type }} rounded-pill px-3 py-2">
+                                {{ item.alerts.0.type }}
+                            </span>
+                        </div>
+                        
+                        <div class="alert-list">
+                            {% for alert in item.alerts %}
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="text-{{ alert.type|lower }}">●</span>
+                                <span class="small fw-semibold">{{ alert.msg }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-5">
+                    <div class="display-1 opacity-10 mb-3">✅</div>
+                    <h6 class="text-muted">No hay alertas críticas activas en este momento.</h6>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Columna Derecha: Top 10 Prioridad -->
+    <div class="col-lg-4">
+        <div class="card-custom border-0 sticky-top" style="top: 100px;">
+            <h6 class="fw-bold mb-4 text-primary-dark">Top 10 Atención Inmediata</h6>
+            <p class="text-muted small mb-4">Calculado según nivel de riesgo y signos vitales actuales.</p>
+            
+            <div class="top-10-list">
+                {% for patient in top_10_patients %}
+                <div class="top-10-item bg-white shadow-sm">
+                    <div class="rank-number">{{ forloop.counter }}</div>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold small">{{ patient.nombres }} {{ patient.apellidos }}</div>
+                        <div class="risk-pill risk-{{ patient.riesgo|lower }} mt-1" style="font-size: 0.65rem;">
+                            {{ patient.riesgo }}
+                        </div>
+                    </div>
+                    <a href="{% url 'patient_detail' patient.pk %}" class="btn btn-sm btn-outline-primary rounded-pill px-3" style="font-size: 0.7rem;">
+                        Ver Ficha
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="mt-4 pt-3 border-top text-center">
+                <small class="text-muted italic">Última actualización: {% now "d/m/Y H:i" %}</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
