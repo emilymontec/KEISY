@@ -222,6 +222,9 @@
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.url_name == 'clinical_analytics' %}active{% endif %}" href="{% url 'clinical_analytics' %}">Analítica</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'predict_individual' %}active{% endif %}" href="{% url 'predict_individual' %}">Predicción AI</a>
+                        </li>
                         {% endif %}
                     </ul>
                     

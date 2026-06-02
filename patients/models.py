@@ -32,6 +32,7 @@ class Patient(models.Model):
     presion_sistolica = models.IntegerField(default=120)
     presion_diastolica = models.IntegerField(default=80)
     saturacion_oxigeno = models.FloatField(default=95)
+    frecuencia_cardiaca = models.IntegerField(default=75)
     diagnostico = models.TextField(null=True, blank=True)
     es_hipertenso = models.BooleanField(default=False)
     es_diabetico = models.BooleanField(default=False)

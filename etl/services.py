@@ -116,6 +116,7 @@ class ETLService:
                 presion_sistolica=int(row.get("presion_sistolica", 120)),
                 presion_diastolica=int(row.get("presion_diastolica", 80)),
                 saturacion_oxigeno=float(row.get("saturacion_oxigeno", 95)),
+                frecuencia_cardiaca=int(row.get("frecuencia_cardiaca", 75)),
                 diagnostico=row["diagnostico"],
                 es_hipertenso=row.get("es_hipertenso", False),
                 es_diabetico=row.get("es_diabetico", False),
@@ -197,6 +198,7 @@ class ETLService:
             presion_sis = random.randint(90, 200)
             glucosa = random.randint(70, 350)
             saturacion = random.randint(80, 100)
+            frecuencia = random.randint(50, 120)
             
             data.append({
                 "nombres": random.choice(nombres),
@@ -211,6 +213,7 @@ class ETLService:
                 "presion_sistolica": presion_sis,
                 "presion_diastolica": random.randint(60, 110),
                 "saturacion_oxigeno": saturacion,
+                "frecuencia_cardiaca": frecuencia,
                 "diagnostico": diag,
                 "es_hipertenso": "Hiper" in diag or presion_sis > 140 or random.random() < 0.1,
                 "es_diabetico": "Diabet" in diag or glucosa > 126 or random.random() < 0.1,

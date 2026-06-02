@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Keisy Medical | Predicción Individual{% endblock %}
+
+{% block extra_css %}
+<style>
+    .prediction-card { border-radius: 24px; padding: 2rem; box-shadow: 0 15px 35px rgba(4, 75, 153, 0.08); }
+    .risk-result { font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .prob-bar { height: 12px; border-radius: 10px; background: #e2e8f0; overflow: hidden; margin: 1.5rem 0; }
+    .prob-fill { height: 100%; transition: width 1s ease-in-out; }
+    
+    .risk-BAJO { color: #166534; }
+    .risk-MEDIO { color: #ca8a04; }
+    .risk-ALTO { color: #ea580c; }
+    .risk-CRITICO { color: #dc2626; }
+    
+    .bg-BAJO { background-color: #22c55e; }
+    .bg-MEDIO { background-color: #eab308; }
+    .bg-ALTO { background-color: #f97316; }
+    .bg-CRITICO { background-color: #ef4444; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card-custom prediction-card">
+            <h5 class="fw-bold mb-4 text-primary-dark">Predicción de Riesgo Individual</h5>
+            <p class="text-muted small mb-4">Ingresa los datos del paciente para que el modelo Random Forest analice el nivel de riesgo clínico.</p>
+            
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %} rounded-4 border-0">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted">Edad</label>
+                        <input type="number" name="edad" class="form-control rounded-3" placeholder="Ej: 45" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted">Glucosa (mg/dL)</label>
+                        <input type="number" name="glucosa" class="form-control rounded-3" placeholder="Ej: 110" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted">Peso (kg)</label>
+                        <input type="number" step="0.1" name="peso" class="form-control rounded-3" placeholder="Ej: 75.5" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted">Altura (m)</label>
+                        <input type="number" step="0.01" name="altura" class="form-control rounded-3" placeholder="Ej: 1.75" required>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label small fw-bold text-muted">Presión Sistólica (mmHg)</label>
+                        <input type="number" name="presion" class="form-control rounded-3" placeholder="Ej: 120" required>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary-custom py-3">
+                        Calcular Predicción
+                    </button>
+                    <a href="{% url 'train_model' %}" class="btn btn-outline-secondary btn-sm border-0">
+                        Re-entrenar modelo Random Forest
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        {% if result %}
+        <div class="card-custom prediction-card h-100 d-flex flex-column justify-content-center text-center">
+            <h6 class="text-muted text-uppercase fw-bold mb-2">Nivel de Riesgo Predicho</h6>
+            <div class="risk-result risk-{{ result.riesgo }}">
+                {{ result.riesgo }}
+            </div>
+            
+            <div class="px-4">
+                <div class="prob-bar">
+                    <div class="prob-fill bg-{{ result.riesgo }}" style="width: {{ result.probabilidad }}%"></div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-primary-dark">Probabilidad</span>
+                    <span class="fs-4 fw-800 text-primary-medium">{{ result.probabilidad }}%</span>
+                </div>
+            </div>
+            
+            <div class="mt-4 pt-4 border-top">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <small class="text-muted d-block">IMC Calculado</small>
+                        <span class="fw-bold">{{ result.imc }}</span>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted d-block">Modelo Utilizado</small>
+                        <span class="badge bg-primary bg-opacity-10 text-primary">Random Forest</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card-custom prediction-card h-100 d-flex flex-column align-items-center justify-content-center text-center bg-light border-0">
+            <div class="display-1 opacity-10 mb-3">🤖</div>
+            <h5 class="text-muted fw-bold">Esperando datos...</h5>
+            <p class="text-muted small">Completa el formulario para obtener un análisis de riesgo basado en inteligencia artificial.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

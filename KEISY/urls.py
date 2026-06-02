@@ -38,6 +38,7 @@ urlpatterns = [
     path('', include('dashboard.urls')),
     path('', include('patients.urls')),
     path('', include('analytics.urls')),
+    path('', include('ml.urls')),
 
     # JWT API
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
