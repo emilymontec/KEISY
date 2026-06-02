@@ -48,6 +48,14 @@
                                 <span class="fw-bold text-primary-dark">{{ object.glucosa|floatformat:0 }}</span>
                             </div>
                             <div class="col-4">
+                                <label class="small text-muted d-block">Saturación</label>
+                                <span class="fw-bold text-primary-dark">{{ object.saturacion_oxigeno|floatformat:0 }}%</span>
+                            </div>
+                            <div class="col-4 mt-3">
+                                <label class="small text-muted d-block">Presión Arterial</label>
+                                <span class="fw-bold text-primary-dark">{{ object.presion_sistolica }}/{{ object.presion_diastolica }}</span>
+                            </div>
+                            <div class="col-4 mt-3">
                                 <label class="small text-muted d-block">Riesgo</label>
                                 <span class="risk-pill risk-{{ object.riesgo|lower }} d-block">{{ object.riesgo }}</span>
                             </div>

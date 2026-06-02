@@ -78,15 +78,25 @@ class ETLService:
 
     @staticmethod
     def classify_risk(row):
-        if row["glucosa"] > 300:
+        # Reglas Críticas
+        if (row.get("presion_sistolica", 0) > 180 or 
+            row.get("glucosa", 0) > 300 or 
+            row.get("saturacion_oxigeno", 100) < 85):
             return "CRITICO"
 
-        if row["imc"] > 30:
+        # Reglas Altas
+        if (row.get("presion_sistolica", 0) > 140 or 
+            row.get("glucosa", 0) > 126): # Umbral médico común para glucosa alta
             return "ALTO"
 
-        if row["glucosa"] > 140:
+        # Reglas Medias
+        if (row.get("imc", 0) > 25 or # Sobrepeso
+            row.get("es_hipertenso", False) or 
+            row.get("es_diabetico", False) or 
+            row.get("es_fumador", False)):
             return "MEDIO"
 
+        # Regla Bajo
         return "BAJO"
 
     @staticmethod
@@ -103,6 +113,9 @@ class ETLService:
                 imc=float(row["imc"]),
                 glucosa=float(row["glucosa"]),
                 colesterol=float(row["colesterol"]),
+                presion_sistolica=int(row.get("presion_sistolica", 120)),
+                presion_diastolica=int(row.get("presion_diastolica", 80)),
+                saturacion_oxigeno=float(row.get("saturacion_oxigeno", 95)),
                 diagnostico=row["diagnostico"],
                 es_hipertenso=row.get("es_hipertenso", False),
                 es_diabetico=row.get("es_diabetico", False),
@@ -179,6 +192,12 @@ class ETLService:
             peso = random.uniform(50, 110)
             altura = random.uniform(1.50, 1.95)
             diag = random.choice(diagnosticos)
+            
+            # Simular signos vitales
+            presion_sis = random.randint(90, 200)
+            glucosa = random.randint(70, 350)
+            saturacion = random.randint(80, 100)
+            
             data.append({
                 "nombres": random.choice(nombres),
                 "apellidos": random.choice(apellidos),
@@ -187,11 +206,14 @@ class ETLService:
                 "sexo": random.choice(["M", "F", "Masculino", "Femenino", "m", "f"]),
                 "peso": round(peso, 1),
                 "altura": round(altura, 2),
-                "glucosa": random.randint(70, 350),
+                "glucosa": glucosa,
                 "colesterol": random.randint(150, 300),
+                "presion_sistolica": presion_sis,
+                "presion_diastolica": random.randint(60, 110),
+                "saturacion_oxigeno": saturacion,
                 "diagnostico": diag,
-                "es_hipertenso": "Hiper" in diag or random.random() < 0.2,
-                "es_diabetico": "Diabet" in diag or random.random() < 0.15,
+                "es_hipertenso": "Hiper" in diag or presion_sis > 140 or random.random() < 0.1,
+                "es_diabetico": "Diabet" in diag or glucosa > 126 or random.random() < 0.1,
                 "es_fumador": random.random() < 0.25,
             })
         
