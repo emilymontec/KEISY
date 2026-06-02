@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}Keisy Medical | {% if object %}Editar{% else %}Nuevo{% endif %} Paciente{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card-custom">
+            <h5 class="fw-bold mb-4 text-primary-dark">{% if object %}Editar{% else %}Registrar Nuevo{% endif %} Paciente</h5>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted">Nombres</label>
+                        {{ form.nombres }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted">Apellidos</label>
+                        {{ form.apellidos }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted">Documento</label>
+                        {{ form.documento }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-muted">Edad</label>
+                        {{ form.edad }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-muted">Sexo</label>
+                        {{ form.sexo }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-muted">Peso (kg)</label>
+                        {{ form.peso }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-muted">Altura (m)</label>
+                        {{ form.altura }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-muted">Glucosa</label>
+                        {{ form.glucosa }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted">Colesterol</label>
+                        {{ form.colesterol }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted">Riesgo</label>
+                        {{ form.riesgo }}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-bold text-muted">Diagnóstico</label>
+                        {{ form.diagnostico }}
+                    </div>
+                </div>
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary-custom">Guardar Cambios</button>
+                    <a href="{% url 'admin_panel' %}" class="btn btn-outline-secondary rounded-3">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control, .form-select {
+        border-radius: 12px;
+        border: 1px solid rgba(4, 75, 153, 0.1);
+        padding: 10px 15px;
+        font-size: 0.9rem;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-light);
+        box-shadow: 0 0 0 4px rgba(0, 171, 189, 0.1);
+    }
+    textarea.form-control { min-height: 100px; }
+</style>
+{% endblock %}

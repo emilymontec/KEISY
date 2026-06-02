@@ -25,6 +25,38 @@ def _upload_page_context():
 @login_required
 def upload_csv(request):
     if request.method == "POST":
+        if "generate_simulated" in request.POST:
+            try:
+                df = ETLService.generate_simulated_dataset()
+                # Para simular la carga, lo guardamos temporalmente
+                datasets_dir = Path("datasets")
+                datasets_dir.mkdir(parents=True, exist_ok=True)
+                file_path = datasets_dir / "simulated_dataset.csv"
+                df.to_csv(file_path, index=False)
+                
+                upload_record = UploadedDataset.objects.create(
+                    file_name="simulated_dataset.csv",
+                    stored_path=str(file_path),
+                    rows_received=len(df)
+                )
+                
+                df_transformed = ETLService.transform(df)
+                df_transformed["riesgo"] = df_transformed.apply(
+                    ETLService.classify_risk,
+                    axis=1,
+                )
+                total = ETLService.load(df_transformed)
+                
+                upload_record.mark_processed(
+                    rows_processed=len(df_transformed),
+                    rows_inserted=total,
+                    notes="Dataset simulado generado y cargado.",
+                )
+                messages.success(request, f"Dataset simulado generado: {total} registros cargados.")
+            except Exception as exc:
+                messages.error(request, f"Error al generar dataset: {str(exc)}")
+            return redirect("upload_csv")
+
         csv_file = request.FILES.get("file")
         if not csv_file:
             messages.error(request, "Selecciona un archivo CSV.")

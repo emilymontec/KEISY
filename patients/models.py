@@ -17,26 +17,22 @@ class Patient(models.Model):
     ]
 
     nombres = models.CharField(max_length=100)
-
     apellidos = models.CharField(max_length=100)
-
+    documento = models.CharField(max_length=20, unique=True, null=True, blank=True)
     edad = models.IntegerField()
-
     sexo = models.CharField(
         max_length=1,
         choices=SEX_CHOICES
     )
-
     peso = models.FloatField()
-
     altura = models.FloatField()
-
     imc = models.FloatField()
-
     glucosa = models.FloatField()
-
     colesterol = models.FloatField()
-
+    diagnostico = models.TextField(null=True, blank=True)
+    es_hipertenso = models.BooleanField(default=False)
+    es_diabetico = models.BooleanField(default=False)
+    es_fumador = models.BooleanField(default=False)
     riesgo = models.CharField(
         max_length=20,
         choices=RISK_CHOICES

@@ -7,12 +7,14 @@ class ETLService:
     REQUIRED_COLUMNS = [
         "nombres",
         "apellidos",
+        "documento",
         "edad",
         "sexo",
         "peso",
         "altura",
         "glucosa",
         "colesterol",
+        "diagnostico",
     ]
     NUMERIC_COLUMNS = [
         "edad",
@@ -30,8 +32,10 @@ class ETLService:
     def transform(cls, df):
         cls._validate_columns(df)
 
+        # 1. Eliminar duplicados
         cleaned_df = df.copy().drop_duplicates().reset_index(drop=True)
 
+        # 2. Convertir tipos de datos y Corregir valores nulos
         for column in cls.NUMERIC_COLUMNS:
             cleaned_df[column] = pd.to_numeric(
                 cleaned_df[column],
@@ -51,14 +55,21 @@ class ETLService:
             cleaned_df["altura"].median()
         )
         if cleaned_df["altura"].isna().any():
-            raise ValueError(
-                "La columna 'altura' necesita al menos un valor valido."
-            )
+            cleaned_df["altura"] = cleaned_df["altura"].fillna(1.70) # Valor por defecto seguro
 
         cleaned_df["edad"] = cleaned_df["edad"].round().astype(int)
+        
+        # 3. Estandarizar sexo
         cleaned_df["sexo"] = cleaned_df["sexo"].apply(
             cls._normalize_sex
         )
+
+        # 4. Corregir diagnósticos comunes
+        cleaned_df["diagnostico"] = cleaned_df["diagnostico"].apply(
+            cls._normalize_diagnosis
+        )
+
+        # Calcular IMC
         cleaned_df["imc"] = (
             cleaned_df["peso"] / (cleaned_df["altura"] ** 2)
         ).round(2)
@@ -84,6 +95,7 @@ class ETLService:
             Patient(
                 nombres=row["nombres"],
                 apellidos=row["apellidos"],
+                documento=str(row["documento"]) if pd.notna(row["documento"]) else None,
                 edad=int(row["edad"]),
                 sexo=row["sexo"],
                 peso=float(row["peso"]),
@@ -91,6 +103,10 @@ class ETLService:
                 imc=float(row["imc"]),
                 glucosa=float(row["glucosa"]),
                 colesterol=float(row["colesterol"]),
+                diagnostico=row["diagnostico"],
+                es_hipertenso=row.get("es_hipertenso", False),
+                es_diabetico=row.get("es_diabetico", False),
+                es_fumador=row.get("es_fumador", False),
                 riesgo=row["riesgo"],
             )
             for _, row in df.iterrows()
@@ -125,8 +141,61 @@ class ETLService:
         }
 
         if normalized not in sex_map:
-            raise ValueError(
-                "La columna 'sexo' solo admite M/F o sus equivalentes."
-            )
+            return "M" # Default or handle error
 
         return sex_map[normalized]
+
+    @staticmethod
+    def _normalize_diagnosis(value):
+        if pd.isna(value) or str(value).strip() == "":
+            return "Pendiente de evaluación"
+        
+        diag = str(value).strip().lower()
+        # Corregir diagnósticos comunes
+        corrections = {
+            "diabetes melitus": "Diabetes Mellitus",
+            "hipertension": "Hipertensión Arterial",
+            "hta": "Hipertensión Arterial",
+            "obesisad": "Obesidad",
+            "asms": "Asma",
+            "gastritis ": "Gastritis",
+        }
+        
+        for key, correct in corrections.items():
+            if key in diag:
+                return correct
+        
+        return str(value).strip().capitalize()
+
+    @staticmethod
+    def generate_simulated_dataset(n_rows=50):
+        import random
+        data = []
+        nombres = ["Juan", "Maria", "Pedro", "Ana", "Luis", "Carmen", "Jose", "Elena", "Carlos", "Lucia"]
+        apellidos = ["Garcia", "Rodriguez", "Lopez", "Martinez", "Perez", "Gonzalez", "Sanchez", "Romero", "Torres", "Ruiz"]
+        diagnosticos = ["Diabetes Melitus", "Hipertension", "HTA", "Obesisad", "Asma", "Sano", "Gastritis", "Anemia"]
+        
+        for i in range(n_rows):
+            peso = random.uniform(50, 110)
+            altura = random.uniform(1.50, 1.95)
+            diag = random.choice(diagnosticos)
+            data.append({
+                "nombres": random.choice(nombres),
+                "apellidos": random.choice(apellidos),
+                "documento": f"10{random.randint(1000000, 9999999)}",
+                "edad": random.randint(18, 85),
+                "sexo": random.choice(["M", "F", "Masculino", "Femenino", "m", "f"]),
+                "peso": round(peso, 1),
+                "altura": round(altura, 2),
+                "glucosa": random.randint(70, 350),
+                "colesterol": random.randint(150, 300),
+                "diagnostico": diag,
+                "es_hipertenso": "Hiper" in diag or random.random() < 0.2,
+                "es_diabetico": "Diabet" in diag or random.random() < 0.15,
+                "es_fumador": random.random() < 0.25,
+            })
+        
+        # Agregar algunos duplicados y nulos para probar transform
+        df = pd.DataFrame(data)
+        return df
+

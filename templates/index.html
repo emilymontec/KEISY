@@ -159,4 +159,87 @@
         </div>
     </div>
 </div>
+
+<div class="row g-4 mt-2">
+    <div class="col-md-4">
+        <div class="card-custom h-100">
+            <h6 class="fw-bold mb-3 text-primary-dark">Distribución por Sexo</h6>
+            <canvas id="genderChart" style="max-height: 250px;"></canvas>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card-custom h-100">
+            <h6 class="fw-bold mb-3 text-primary-dark">Distribución por Edad</h6>
+            <canvas id="ageChart" style="max-height: 250px;"></canvas>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card-custom h-100">
+            <h6 class="fw-bold mb-3 text-primary-dark">Diagnósticos Frecuentes</h6>
+            <canvas id="diagnosisChart" style="max-height: 250px;"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const chartData = JSON.parse('{{ chart_data_json|safe }}');
+    
+    // Configuración común
+    const colors = ['#044b99', '#0697aa', '#00abbd', '#dd4496', '#64748b'];
+
+    // Gráfica de Torta: Sexo
+    new Chart(document.getElementById('genderChart'), {
+        type: 'pie',
+        data: {
+            labels: chartData.gender.labels.map(l => l === 'M' ? 'Masculino' : 'Femenino'),
+            datasets: [{
+                data: chartData.gender.data,
+                backgroundColor: colors
+            }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    });
+
+    // Gráfica de Barras: Edad
+    new Chart(document.getElementById('ageChart'), {
+        type: 'bar',
+        data: {
+            labels: chartData.age.labels,
+            datasets: [{
+                label: 'Pacientes',
+                data: chartData.age.data,
+                backgroundColor: colors[1]
+            }]
+        },
+        options: { 
+            responsive: true, 
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    // Gráfica de Líneas: Diagnósticos
+    new Chart(document.getElementById('diagnosisChart'), {
+        type: 'line',
+        data: {
+            labels: chartData.diagnoses.labels,
+            datasets: [{
+                label: 'Frecuencia',
+                data: chartData.diagnoses.data,
+                borderColor: colors[3],
+                backgroundColor: colors[3] + '20',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: { 
+            responsive: true, 
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+</script>
 {% endblock %}

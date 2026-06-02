@@ -1,6 +1,8 @@
-from django.db.models import Avg, Q
+from django.db.models import Avg, Q, Count
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+import json
 
 from etl.models import UploadedDataset
 from patients.models import Patient
@@ -11,12 +13,44 @@ def home(request):
     successful_uploads = UploadedDataset.objects.filter(
         status="SUCCESS"
     ).count()
+    
+    # Pacientes por sexo
+    gender_stats = list(Patient.objects.values('sexo').annotate(total=Count('id')))
+    
+    # Distribución por edad
+    age_ranges = {
+        "Jóvenes (18-30)": Patient.objects.filter(edad__gte=18, edad__lte=30).count(),
+        "Adultos (31-50)": Patient.objects.filter(edad__gte=31, edad__lte=50).count(),
+        "Mayores (51-70)": Patient.objects.filter(edad__gte=51, edad__lte=70).count(),
+        "Ancianos (71+)": Patient.objects.filter(edad__gte=71).count(),
+    }
+    
+    # Diagnósticos frecuentes
+    top_diagnoses = list(Patient.objects.values('diagnostico').annotate(total=Count('id')).order_by('-total')[:5])
+    
+    # Datos para gráficas (JSON)
+    chart_data = {
+        "gender": {
+            "labels": [g['sexo'] for g in gender_stats],
+            "data": [g['total'] for g in gender_stats]
+        },
+        "age": {
+            "labels": list(age_ranges.keys()),
+            "data": list(age_ranges.values())
+        },
+        "diagnoses": {
+            "labels": [d['diagnostico'] for d in top_diagnoses],
+            "data": [d['total'] for d in top_diagnoses]
+        }
+    }
+
     risk_summary = {
         "critico": Patient.objects.filter(riesgo="CRITICO").count(),
         "alto": Patient.objects.filter(riesgo="ALTO").count(),
         "medio": Patient.objects.filter(riesgo="MEDIO").count(),
         "bajo": Patient.objects.filter(riesgo="BAJO").count(),
     }
+    
     context = {
         "total_patients": Patient.objects.count(),
         "total_uploads": UploadedDataset.objects.count(),
@@ -25,6 +59,10 @@ def home(request):
         "recent_uploads": UploadedDataset.objects.order_by("-uploaded_at")[:5],
         "risk_summary": risk_summary,
         "successful_uploads": successful_uploads,
+        "chart_data_json": json.dumps(chart_data),
+        "age_ranges": age_ranges,
+        "gender_stats": gender_stats,
+        "top_diagnoses": top_diagnoses,
     }
 
     return render(request, "index.html", context)
@@ -41,7 +79,9 @@ def admin_panel(request):
     if search_query:
         patients = patients.filter(
             Q(nombres__icontains=search_query) |
-            Q(apellidos__icontains=search_query)
+            Q(apellidos__icontains=search_query) |
+            Q(documento__icontains=search_query) |
+            Q(diagnostico__icontains=search_query)
         )
 
     if risk_filter:
@@ -50,11 +90,16 @@ def admin_panel(request):
     if gender_filter:
         patients = patients.filter(sexo=gender_filter)
 
+    # Paginación
+    paginator = Paginator(patients, 10)  # 10 pacientes por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     uploads = UploadedDataset.objects.all().order_by("-uploaded_at")
     filtered_count = patients.count()
 
     context = {
-        "patients": patients,
+        "patients": page_obj,  # Usar el objeto paginado
         "uploads": uploads,
         "search_query": search_query,
         "risk_filter": risk_filter,

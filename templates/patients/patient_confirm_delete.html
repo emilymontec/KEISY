@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Keisy Medical | Eliminar Paciente{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card-custom text-center">
+            <h5 class="fw-bold mb-4 text-danger">¿Confirmar eliminación?</h5>
+            <p class="text-muted mb-4">
+                Estás a punto de eliminar permanentemente el registro de 
+                <strong>{{ object.nombres }} {{ object.apellidos }}</strong>. 
+                Esta acción no se puede deshacer.
+            </p>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-danger py-3 rounded-4 fw-bold">Eliminar Definitivamente</button>
+                    <a href="{% url 'admin_panel' %}" class="btn btn-outline-secondary py-2 rounded-4">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

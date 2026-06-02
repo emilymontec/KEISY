@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load auth_extras %}
 
 {% block title %}Keisy Medical | Panel Clínico{% endblock %}
 
@@ -38,11 +39,18 @@
 <div class="row g-4">
     <div class="col-lg-8">
         <div class="card-custom mb-4">
-            <h5 class="fw-bold mb-4 text-primary-dark">Listado de Pacientes</h5>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="fw-bold mb-0 text-primary-dark">Listado de Pacientes</h5>
+                {% if user.is_superuser or user|has_group:"Administrador" or user|has_group:"Medico" %}
+                <a href="{% url 'patient_add' %}" class="btn btn-primary-custom py-2 px-3">
+                    + Nuevo Paciente
+                </a>
+                {% endif %}
+            </div>
             
             <form method="GET" class="row g-2 mb-4">
                 <div class="col-md-5">
-                    <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Buscar por nombre o apellido...">
+                    <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Buscar por nombre, documento o diagnóstico...">
                 </div>
                 <div class="col-md-3">
                     <select name="risk" class="form-select">
@@ -78,14 +86,21 @@
                             <th>Edad/Sexo</th>
                             <th>IMC</th>
                             <th>Riesgo</th>
+                            {% if user.is_superuser or user|has_group:"Administrador" or user|has_group:"Medico" %}
+                            <th>Acciones</th>
+                            {% endif %}
                         </tr>
                     </thead>
                     <tbody>
                         {% for patient in patients %}
                         <tr>
                             <td>
-                                <div class="fw-bold text-primary-dark">{{ patient.nombres }} {{ patient.apellidos }}</div>
-                                <div class="text-muted small">ID: {{ patient.id|truncatechars:10 }}</div>
+                                <div class="fw-bold text-primary-dark">
+                                    <a href="{% url 'patient_detail' patient.pk %}" class="text-decoration-none text-primary-dark">
+                                        {{ patient.nombres }} {{ patient.apellidos }}
+                                    </a>
+                                </div>
+                                <div class="text-muted small">ID: {{ patient.documento|default:patient.id|truncatechars:10 }}</div>
                             </td>
                             <td>
                                 <span class="fw-bold text-muted">{{ patient.edad }} años</span><br>
@@ -93,6 +108,20 @@
                             </td>
                             <td><span class="fw-bold text-muted">{{ patient.imc|floatformat:1 }}</span></td>
                             <td><span class="risk-pill risk-{{ patient.riesgo|lower }}">{{ patient.riesgo }}</span></td>
+                            {% if user.is_superuser or user|has_group:"Administrador" or user|has_group:"Medico" %}
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'patient_edit' patient.pk %}" class="btn btn-sm btn-outline-primary">
+                                        Editar
+                                    </a>
+                                    {% if user.is_superuser or user|has_group:"Administrador" %}
+                                    <a href="{% url 'patient_delete' patient.pk %}" class="btn btn-sm btn-outline-danger">
+                                        Eliminar
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            {% endif %}
                         </tr>
                         {% empty %}
                         <tr><td colspan="4" class="text-center py-5 text-muted">No se encontraron pacientes con los filtros aplicados.</td></tr>
@@ -100,6 +129,37 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Paginación -->
+            {% if patients.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if patients.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ patients.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if risk_filter %}&risk={{ risk_filter }}{% endif %}{% if gender_filter %}&gender={{ gender_filter }}{% endif %}">&laquo;</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                    {% endif %}
+
+                    {% for i in patients.paginator.page_range %}
+                        {% if patients.number == i %}
+                            <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                        {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ i }}{% if search_query %}&q={{ search_query }}{% endif %}{% if risk_filter %}&risk={{ risk_filter }}{% endif %}{% if gender_filter %}&gender={{ gender_filter }}{% endif %}">{{ i }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if patients.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ patients.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if risk_filter %}&risk={{ risk_filter }}{% endif %}{% if gender_filter %}&gender={{ gender_filter }}{% endif %}">&raquo;</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
         </div>
     </div>
 

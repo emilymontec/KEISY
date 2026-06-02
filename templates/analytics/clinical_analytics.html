@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% block title %}Keisy Medical | Analítica Clínica{% endblock %}
+
+{% block extra_css %}
+<style>
+    .kpi-card {
+        border-radius: 20px;
+        padding: 20px;
+        color: white;
+        min-height: 120px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    }
+    .kpi-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; opacity: 0.8; }
+    .kpi-value { font-size: 2rem; font-weight: 800; }
+    
+    .bg-kpi-1 { background: linear-gradient(135deg, #044b99, #0697aa); }
+    .bg-kpi-2 { background: linear-gradient(135deg, #dd4496, #ff7eb3); }
+    .bg-kpi-3 { background: linear-gradient(135deg, #00abbd, #0697aa); }
+    .bg-kpi-4 { background: linear-gradient(135deg, #64748b, #94a3b8); }
+    .bg-kpi-5 { background: linear-gradient(135deg, #ea580c, #f97316); }
+
+    .stats-table th { background: rgba(6, 151, 170, 0.05); color: var(--primary-dark); font-size: 0.75rem; text-transform: uppercase; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-5">
+    <div class="col-md">
+        <div class="kpi-card bg-kpi-1">
+            <span class="kpi-title">Total Pacientes</span>
+            <span class="kpi-value">{{ total_patients }}</span>
+        </div>
+    </div>
+    <div class="col-md">
+        <div class="kpi-card bg-kpi-2">
+            <span class="kpi-title">Hipertensos</span>
+            <span class="kpi-value">{{ hypertensive_count }}</span>
+        </div>
+    </div>
+    <div class="col-md">
+        <div class="kpi-card bg-kpi-3">
+            <span class="kpi-title">Diabéticos</span>
+            <span class="kpi-value">{{ diabetic_count }}</span>
+        </div>
+    </div>
+    <div class="col-md">
+        <div class="kpi-card bg-kpi-4">
+            <span class="kpi-title">Fumadores</span>
+            <span class="kpi-value">{{ smoker_count }}</span>
+        </div>
+    </div>
+    <div class="col-md">
+        <div class="kpi-card bg-kpi-5">
+            <span class="kpi-title">Riesgo Promedio</span>
+            <span class="kpi-value" style="font-size: 1.5rem;">{{ avg_risk_label }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-lg-12">
+        <div class="card-custom">
+            <h5 class="fw-bold mb-4 text-primary-dark">Estadísticas Descriptivas</h5>
+            <div class="table-responsive">
+                <table class="table stats-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Variable</th>
+                            <th class="text-center">Media</th>
+                            <th class="text-center">Mediana</th>
+                            <th class="text-center">Moda</th>
+                            <th class="text-center">Desviación Estándar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for var, vals in stats_data.items %}
+                        <tr>
+                            <td class="fw-bold text-primary-dark text-capitalize">{{ var }}</td>
+                            <td class="text-center">{{ vals.mean }}</td>
+                            <td class="text-center">{{ vals.median }}</td>
+                            <td class="text-center">{{ vals.mode }}</td>
+                            <td class="text-center">{{ vals.std }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card-custom h-100">
+            <h6 class="fw-bold mb-4 text-primary-dark">Segmentación por Edad</h6>
+            <canvas id="ageSegmentationChart"></canvas>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card-custom h-100">
+            <h6 class="fw-bold mb-4 text-primary-dark">Segmentación por Sexo</h6>
+            <canvas id="sexSegmentationChart"></canvas>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card-custom h-100">
+            <h6 class="fw-bold mb-4 text-primary-dark">Segmentación por IMC</h6>
+            <canvas id="imcSegmentationChart"></canvas>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card-custom h-100">
+            <h6 class="fw-bold mb-4 text-primary-dark">Segmentación por Riesgo</h6>
+            <canvas id="riskSegmentationChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const chartData = JSON.parse('{{ chart_data_json|safe }}');
+    const colors = ['#044b99', '#dd4496', '#00abbd', '#64748b', '#ea580c', '#0697aa'];
+
+    function createChart(id, type, labels, data, label) {
+        new Chart(document.getElementById(id), {
+            type: type,
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: label,
+                    data: data,
+                    backgroundColor: type === 'pie' || type === 'doughnut' ? colors : colors[0],
+                    borderColor: type === 'line' ? colors[1] : 'transparent',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom', display: type === 'pie' || type === 'doughnut' } }
+            }
+        });
+    }
+
+    createChart('ageSegmentationChart', 'bar', chartData.age.labels, chartData.age.data, 'Pacientes');
+    createChart('sexSegmentationChart', 'pie', chartData.sex.labels, chartData.sex.data, 'Pacientes');
+    createChart('imcSegmentationChart', 'doughnut', chartData.imc.labels, chartData.imc.data, 'Pacientes');
+    createChart('riskSegmentationChart', 'bar', chartData.risk.labels, chartData.risk.data, 'Pacientes');
+</script>
+{% endblock %}

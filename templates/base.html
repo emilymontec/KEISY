@@ -1,4 +1,5 @@
 {% load static %}
+{% load auth_extras %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -208,11 +209,18 @@
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}">Dashboard</a>
                         </li>
+                        
+                        {% if user.is_superuser or user|has_group:"Administrador" or user|has_group:"Medico" %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.url_name == 'upload_csv' %}active{% endif %}" href="{% url 'upload_csv' %}">Carga CSV</a>
                         </li>
+                        {% endif %}
+
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.url_name == 'admin_panel' %}active{% endif %}" href="{% url 'admin_panel' %}">Panel Clínico</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'clinical_analytics' %}active{% endif %}" href="{% url 'clinical_analytics' %}">Analítica</a>
                         </li>
                         {% endif %}
                     </ul>
