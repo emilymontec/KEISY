@@ -1,194 +1,175 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Keisy | Centro de Control Medico</title>
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
-    <link rel="stylesheet" href="{% static 'css/medical-ui.css' %}">
+    <title>Keisy Medical | Dashboard</title>
+    <link rel="icon" href="data:,">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #044b99;
+            --secondary: #0697aa;
+            --bg-light: #f8fafc;
+            --text-dark: #0f172a;
+        }
+        body { background-color: var(--bg-light); color: var(--text-dark); font-family: system-ui, -apple-system, sans-serif; }
+        .navbar-custom { background: white; border-bottom: 1px solid #e2e8f0; padding: 1rem 2rem; }
+        .app-icon { width: 32px; height: 32px; vertical-align: middle; margin-right: 10px; }
+        .card-stat { border: none; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: transform 0.2s; }
+        .card-stat:hover { transform: translateY(-2px); }
+        .risk-pill { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+        .risk-critico { background: #fee2e2; color: #dc2626; }
+        .risk-alto { background: #ffedd5; color: #ea580c; }
+        .risk-medio { background: #fef9c3; color: #ca8a04; }
+        .risk-bajo { background: #dcfce7; color: #166534; }
+    </style>
 </head>
-<body class="medical-body">
-    <div class="medical-shell">
-        <nav class="medical-navbar py-3">
-            <div class="container d-flex flex-wrap align-items-center justify-content-between">
-                <a class="medical-brand" href="/">
-                    <span class="brand-mark">+</span>
-                    <span>
-                        Keisy Medical
-                        <br>
-                        <small class="fw-normal text-white-50">Control ETL y seguimiento clinico</small>
-                    </span>
-                </a>
-                <div class="nav-actions">
-                    <a class="btn-medical-outline" href="/upload/">Cargar dataset</a>
-                    <a class="btn-medical" href="/admin/">Panel admin</a>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-custom mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold text-primary" href="{% url 'home' %}">
+                <img src="C:\Users\DESKTOP\Desktop\keisy\templates\assets\keisy.png" alt="Icon" class="app-icon">
+                Keisy Medical
+            </a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link active" href="{% url 'home' %}">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'upload_csv' %}">Carga CSV</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'admin_panel' %}">Panel Clínico</a></li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <span class="me-3 text-muted small">Usuario: <strong>{{ request.user.username }}</strong></span>
+                    <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-sm">Salir</a>
                 </div>
             </div>
-        </nav>
+        </div>
+    </nav>
 
-        <main class="container py-5">
-            <section class="hero-panel mb-4">
-                <span class="eyebrow">Sistema medico con carga segura de datos</span>
-                <h1 class="hero-title">Panel operativo para pacientes, archivos y trazabilidad clinica.</h1>
-                <p class="hero-copy mb-4 col-lg-8">
-                    Centraliza la carga de CSV, valida transformaciones ETL, consulta registros guardados
-                    en Supabase y accede al panel administrativo con una interfaz consistente y profesional.
-                </p>
-                <div class="nav-actions">
-                    <a class="btn-medical" href="/upload/">Subir archivo clinico</a>
-                    <a class="btn-medical-outline" href="/admin/login/">Ingresar al admin</a>
+    <div class="container py-4">
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="card card-stat p-4 bg-white text-center">
+                    <span class="text-muted text-uppercase small fw-bold">Pacientes</span>
+                    <h2 class="display-5 fw-bold text-primary m-0">{{ total_patients }}</h2>
                 </div>
-            </section>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-stat p-4 bg-dark text-white text-center">
+                    <span class="text-light text-uppercase small fw-bold">Cargas Exitosas</span>
+                    <h2 class="display-5 fw-bold m-0">{{ successful_uploads }}</h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-stat p-4 bg-white text-center border-top border-4 border-info">
+                    <span class="text-muted text-uppercase small fw-bold">IMC Promedio</span>
+                    <h2 class="display-5 fw-bold text-info m-0">{% if avg_imc %}{{ avg_imc|floatformat:1 }}{% else %}0.0{% endif %}</h2>
+                </div>
+            </div>
+        </div>
 
-            <section class="row g-4 mb-4">
-                <div class="col-md-4">
-                    <div class="metric-card d-flex justify-content-between align-items-start">
-                        <div>
-                            <div class="metric-label">Pacientes guardados</div>
-                            <h2 class="metric-value">{{ total_patients }}</h2>
-                        </div>
-                        <div class="metric-accent accent-blue">P</div>
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0 rounded-4 p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold m-0">Mapa de Riesgo Clínico</h5>
+                        <a href="{% url 'admin_panel' %}" class="btn btn-sm btn-link text-decoration-none">Ver Detalles →</a>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="metric-card d-flex justify-content-between align-items-start">
-                        <div>
-                            <div class="metric-label">Archivos cargados</div>
-                            <h2 class="metric-value">{{ total_uploads }}</h2>
-                        </div>
-                        <div class="metric-accent accent-teal">A</div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="metric-card d-flex justify-content-between align-items-start">
-                        <div>
-                            <div class="metric-label">IMC promedio</div>
-                            <h2 class="metric-value">
-                                {% if avg_imc %}
-                                    {{ avg_imc|floatformat:1 }}
-                                {% else %}
-                                    0.0
-                                {% endif %}
-                            </h2>
-                        </div>
-                        <div class="metric-accent accent-pink">IMC</div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="surface-card p-4 mb-4">
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
-                    <div>
-                        <h2 class="section-title">Mapa de riesgo clinico</h2>
-                        <p class="section-copy mb-0">Resumen inmediato de los pacientes almacenados.</p>
-                    </div>
-                    <a class="btn-medical-outline" href="/admin/patients/patient/">Consultar registros</a>
-                </div>
-                <div class="kpi-strip">
-                    <div class="metric-card">
-                        <div class="metric-label">Critico</div>
-                        <h3 class="metric-value">{{ risk_summary.critico }}</h3>
-                        <span class="risk-badge risk-critico">Atencion inmediata</span>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-label">Alto</div>
-                        <h3 class="metric-value">{{ risk_summary.alto }}</h3>
-                        <span class="risk-badge risk-alto">Seguimiento prioritario</span>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-label">Medio</div>
-                        <h3 class="metric-value">{{ risk_summary.medio }}</h3>
-                        <span class="risk-badge risk-medio">Control programado</span>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-label">Bajo</div>
-                        <h3 class="metric-value">{{ risk_summary.bajo }}</h3>
-                        <span class="risk-badge risk-bajo">Monitoreo regular</span>
-                    </div>
-                </div>
-            </section>
-
-            <section class="row g-4">
-                <div class="col-lg-7">
-                    <div class="surface-card p-4 h-100">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div>
-                                <h2 class="section-title">Pacientes recientes</h2>
-                                <p class="section-copy mb-0">Ultimos registros guardados en el sistema.</p>
+                    <div class="row g-2 text-center">
+                        <div class="col-3">
+                            <div class="p-3 bg-danger bg-opacity-10 rounded-3">
+                                <span class="risk-pill risk-critico mb-2 d-inline-block">Crítico</span>
+                                <h4 class="m-0 fw-bold">{{ risk_summary.critico }}</h4>
                             </div>
-                            <a class="btn-medical-outline" href="/admin/patients/patient/">Ver todos</a>
                         </div>
-                        {% if recent_patients %}
-                            <table class="soft-table">
-                                <thead>
-                                    <tr>
-                                        <th>Paciente</th>
-                                        <th>IMC</th>
-                                        <th>Glucosa</th>
-                                        <th>Riesgo</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for patient in recent_patients %}
-                                        <tr>
-                                            <td>
-                                                <strong>{{ patient.nombres }} {{ patient.apellidos }}</strong>
-                                                <br>
-                                                <span class="footer-note">{{ patient.created_at|date:"d/m/Y H:i" }}</span>
-                                            </td>
-                                            <td>{{ patient.imc|floatformat:1 }}</td>
-                                            <td>{{ patient.glucosa|floatformat:0 }}</td>
-                                            <td>
-                                                <span class="risk-badge risk-{{ patient.riesgo|lower }}">
-                                                    {{ patient.riesgo }}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        {% else %}
-                            <div class="empty-state">Aun no hay pacientes guardados.</div>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="col-lg-5">
-                    <div class="surface-card p-4 h-100">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div>
-                                <h2 class="section-title">Archivos cargados</h2>
-                                <p class="section-copy mb-0">Historial de procesamiento disponible tambien en el admin.</p>
+                        <div class="col-3">
+                            <div class="p-3 bg-warning bg-opacity-10 rounded-3">
+                                <span class="risk-pill risk-alto mb-2 d-inline-block">Alto</span>
+                                <h4 class="m-0 fw-bold">{{ risk_summary.alto }}</h4>
                             </div>
-                            <a class="btn-medical-outline" href="/admin/etl/uploadeddataset/">Abrir historial</a>
                         </div>
-                        {% if recent_uploads %}
-                            {% for upload in recent_uploads %}
-                                <div class="metric-card mb-3">
-                                    <div class="d-flex justify-content-between align-items-start gap-3">
-                                        <div>
-                                            <strong>{{ upload.file_name }}</strong>
-                                            <div class="footer-note">{{ upload.uploaded_at|date:"d/m/Y H:i" }}</div>
-                                        </div>
-                                        <span class="status-badge status-{{ upload.status|lower }}">{{ upload.get_status_display }}</span>
-                                    </div>
-                                    <div class="mt-3 footer-note">
-                                        Recibidas: {{ upload.rows_received }} |
-                                        Procesadas: {{ upload.rows_processed }} |
-                                        Insertadas: {{ upload.rows_inserted }}
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="empty-state">No hay cargas registradas todavia.</div>
-                        {% endif %}
+                        <div class="col-3">
+                            <div class="p-3 bg-primary bg-opacity-10 rounded-3">
+                                <span class="risk-pill risk-medio mb-2 d-inline-block">Medio</span>
+                                <h4 class="m-0 fw-bold">{{ risk_summary.medio }}</h4>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="p-3 bg-success bg-opacity-10 rounded-3">
+                                <span class="risk-pill risk-bajo mb-2 d-inline-block">Bajo</span>
+                                <h4 class="m-0 fw-bold">{{ risk_summary.bajo }}</h4>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </section>
-        </main>
+
+                <div class="card shadow-sm border-0 rounded-4 p-4 mt-4">
+                    <h5 class="fw-bold mb-4">Últimos Pacientes</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Paciente</th>
+                                    <th>IMC</th>
+                                    <th>Glucosa</th>
+                                    <th>Riesgo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for patient in recent_patients %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">{{ patient.nombres }} {{ patient.apellidos }}</div>
+                                        <div class="text-muted small">{{ patient.created_at|date:"d/m/Y" }}</div>
+                                    </td>
+                                    <td>{{ patient.imc|floatformat:1 }}</td>
+                                    <td>{{ patient.glucosa|floatformat:0 }} mg/dL</td>
+                                    <td><span class="risk-pill risk-{{ patient.riesgo|lower }}">{{ patient.riesgo }}</span></td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="4" class="text-center py-4 text-muted">Sin registros.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 rounded-4 p-4 bg-primary text-white mb-4">
+                    <h5 class="fw-bold mb-3">Acciones</h5>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'upload_csv' %}" class="btn btn-light fw-bold py-3">Nueva Carga ETL</a>
+                        <a href="/admin/" class="btn btn-outline-light py-2">Django Admin</a>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 rounded-4 p-4">
+                    <h5 class="fw-bold mb-4">Historial ETL</h5>
+                    <div class="list-group list-group-flush">
+                        {% for upload in recent_uploads %}
+                        <div class="list-group-item px-0 border-bottom">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <strong class="text-truncate d-block" style="max-width: 150px;">{{ upload.file_name }}</strong>
+                                <span class="badge bg-success small">{{ upload.get_status_display }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted small mt-1">
+                                <span>{{ upload.uploaded_at|date:"d/m H:i" }}</span>
+                                <span>{{ upload.rows_inserted }} filas</span>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-center text-muted py-3">Sin historial.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <footer class="container py-5 mt-5 border-top text-center text-muted">
+        <p class="mb-1"><strong>Keisy Medical.</strong> Ecosistema de Salud Digital.</p>
+        <small>© 2026 Todos los derechos reservados.</small>
+    </footer>
 </body>
 </html>

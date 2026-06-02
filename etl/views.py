@@ -1,11 +1,28 @@
 from django.contrib import messages
 from django.shortcuts import redirect, render
+from django.contrib.auth.decorators import login_required
+from django.db.models import Avg
 from pathlib import Path
 
 from .models import UploadedDataset
 from .services import ETLService
+from patients.models import Patient
 
 
+def _upload_page_context():
+    successful_uploads = UploadedDataset.objects.filter(
+        status="SUCCESS"
+    ).count()
+    return {
+        "recent_uploads": UploadedDataset.objects.order_by("-uploaded_at")[:4],
+        "total_uploads": UploadedDataset.objects.count(),
+        "successful_uploads": successful_uploads,
+        "total_patients": Patient.objects.count(),
+        "avg_imc": Patient.objects.aggregate(avg_imc=Avg("imc"))["avg_imc"],
+    }
+
+
+@login_required
 def upload_csv(request):
     if request.method == "POST":
         csv_file = request.FILES.get("file")
@@ -52,4 +69,4 @@ def upload_csv(request):
 
         return redirect("upload_csv")
 
-    return render(request, "views/upload.html")
+    return render(request, "views/upload.html", _upload_page_context())
