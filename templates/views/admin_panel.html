@@ -170,14 +170,20 @@
                 {% for upload in uploads %}
                 <div class="list-group-item px-0 border-bottom-0 pb-3 mb-3 border-bottom">
                     <div class="d-flex justify-content-between align-items-start">
-                        <strong class="text-truncate d-block text-primary-dark" style="max-width: 150px;">{{ upload.file_name }}</strong>
+                        <div class="text-truncate" style="max-width: 150px;">
+                            <strong class="d-block text-primary-dark">{{ upload.file_name }}</strong>
+                            <small class="text-muted">Por: {{ upload.user.username|default:"Sistema" }}</small>
+                        </div>
                         <span class="badge rounded-pill bg-success bg-opacity-10 text-success small px-3">
                             {{ upload.get_status_display }}
                         </span>
                     </div>
                     <div class="d-flex justify-content-between text-muted small mt-2">
                         <span>{{ upload.uploaded_at|date:"d/m/Y H:i" }}</span>
-                        <span class="fw-bold text-primary-light">{{ upload.rows_inserted }} filas</span>
+                        <div>
+                            <span class="fw-bold text-primary-light">{{ upload.rows_inserted }} filas</span>
+                            <span class="ms-2">({{ upload.execution_time }}s)</span>
+                        </div>
                     </div>
                 </div>
                 {% empty %}

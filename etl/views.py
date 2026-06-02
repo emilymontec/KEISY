@@ -3,6 +3,7 @@ from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg
 from pathlib import Path
+import time
 
 from .models import UploadedDataset
 from .services import ETLService
@@ -25,6 +26,8 @@ def _upload_page_context():
 @login_required
 def upload_csv(request):
     if request.method == "POST":
+        start_time = time.time()
+        
         if "generate_simulated" in request.POST:
             try:
                 df = ETLService.generate_simulated_dataset()
@@ -35,6 +38,7 @@ def upload_csv(request):
                 df.to_csv(file_path, index=False)
                 
                 upload_record = UploadedDataset.objects.create(
+                    user=request.user,
                     file_name="simulated_dataset.csv",
                     stored_path=str(file_path),
                     rows_received=len(df)
@@ -47,13 +51,16 @@ def upload_csv(request):
                 )
                 total = ETLService.load(df_transformed)
                 
+                execution_time = round(time.time() - start_time, 2)
                 upload_record.mark_processed(
                     rows_processed=len(df_transformed),
                     rows_inserted=total,
+                    execution_time=execution_time,
                     notes="Dataset simulado generado y cargado.",
                 )
                 messages.success(request, f"Dataset simulado generado: {total} registros cargados.")
             except Exception as exc:
+                execution_time = round(time.time() - start_time, 2)
                 messages.error(request, f"Error al generar dataset: {str(exc)}")
             return redirect("upload_csv")
 
@@ -66,6 +73,7 @@ def upload_csv(request):
         datasets_dir.mkdir(parents=True, exist_ok=True)
         file_path = datasets_dir / csv_file.name
         upload_record = UploadedDataset.objects.create(
+            user=request.user,
             file_name=csv_file.name,
             stored_path=str(file_path),
         )
@@ -86,17 +94,20 @@ def upload_csv(request):
 
             total = ETLService.load(df)
         except Exception as exc:
-            upload_record.mark_error(str(exc))
+            execution_time = round(time.time() - start_time, 2)
+            upload_record.mark_error(str(exc), execution_time=execution_time)
             messages.error(request, str(exc))
         else:
+            execution_time = round(time.time() - start_time, 2)
             upload_record.mark_processed(
                 rows_processed=len(df),
                 rows_inserted=total,
+                execution_time=execution_time,
                 notes="Carga completada desde la interfaz web.",
             )
             messages.success(
                 request,
-                f"{total} pacientes procesados y guardados en Supabase.",
+                f"{total} pacientes procesados y guardados en la base de datos.",
             )
 
         return redirect("upload_csv")
