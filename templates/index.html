@@ -5,10 +5,10 @@
 {% block extra_css %}
 <style>
     .risk-pill { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
-    .risk-critico { background: #fee2e2; color: #dc2626; }
-    .risk-alto { background: #ffedd5; color: #ea580c; }
-    .risk-medio { background: #fef9c3; color: #ca8a04; }
-    .risk-bajo { background: #dcfce7; color: #166534; }
+    .risk-critico { color: #dc2626; }
+    .risk-alto { color: #ea580c; }
+    .risk-medio { color: #ca8a04; }
+    .risk-bajo { color: #166534; }
     
     .stat-value { font-size: 2.5rem; font-weight: 800; color: var(--primary-dark); }
     .stat-label { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
@@ -129,13 +129,13 @@
             <p class="small opacity-75 mb-4">Gestiona la carga de datos y reportes clínicos desde aquí.</p>
             <div class="d-grid gap-3">
                 <a href="{% url 'upload_csv' %}" class="btn btn-light fw-bold py-3 rounded-4 shadow-sm transition-hover">
-                    <i class="bi bi-cloud-upload me-2"></i>Nueva Carga ETL
+                    <i class="bi bi-cloud-upload me-2"></i>Nueva Carga de Datos
                 </a>
             </div>
         </div>
 
         <div class="card-custom">
-            <h5 class="fw-bold mb-4 text-primary-dark"><i class="bi bi-clock-history me-2"></i>Historial ETL</h5>
+            <h5 class="fw-bold mb-4 text-primary-dark"><i class="bi bi-clock-history me-2"></i>Historial de Cargas</h5>
             <div class="list-group list-group-flush">
                 {% for upload in recent_uploads %}
                 <div class="list-group-item px-0 border-bottom-0 pb-3 mb-3 border-bottom">
@@ -144,7 +144,7 @@
                             <strong class="d-block text-primary-dark">{{ upload.file_name }}</strong>
                             <small class="text-muted">Por: {{ upload.user.username|default:"Sistema" }}</small>
                         </div>
-                        <span class="badge rounded-pill {% if upload.status == 'SUCCESS' %}bg-success{% else %}bg-warning{% endif %} bg-opacity-10 text-{% if upload.status == 'SUCCESS' %}success{% else %}warning{% endif %} small px-3">
+                        <span class="badge rounded-pill {% if upload.status == 'SUCCESS' %}bg-success text-success{% else %}bg-danger text-danger{% endif %} bg-opacity-10 small px-3">
                             {{ upload.get_status_display }}
                         </span>
                     </div>
