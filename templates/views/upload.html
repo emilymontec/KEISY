@@ -38,7 +38,7 @@
 <div class="row g-4">
     <div class="col-lg-8">
         <div class="card-custom mb-4">
-            <h5 class="fw-bold mb-4 text-primary-dark">Carga de Dataset Clínico</h5>
+            <h5 class="fw-bold mb-4 text-primary-dark"><i class="bi bi-file-earmark-arrow-up-fill me-2"></i>Carga de Dataset Clínico</h5>
             
             {% if messages %}
                 {% for message in messages %}
@@ -51,8 +51,8 @@
 
             <form method="POST" enctype="multipart/form-data" id="upload-form">
                 {% csrf_token %}
-                <div id="dropzone" class="dropzone mb-4">
-                    <div class="display-4 mb-3">📂</div>
+                <div id="dropzone" class="dropzone mb-4 transition-hover">
+                    <div class="display-4 mb-3 text-primary-light"><i class="bi bi-file-earmark-plus"></i></div>
                     <h6 class="fw-bold text-primary-dark">Selecciona o arrastra tu archivo CSV</h6>
                     <p class="text-muted small mx-auto" style="max-width: 400px;">
                         Formato requerido: nombres, apellidos, edad, sexo, peso, altura, glucosa, colesterol

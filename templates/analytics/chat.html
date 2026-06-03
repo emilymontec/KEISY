@@ -96,13 +96,13 @@
 <div class="chat-container">
     <div class="chat-card">
         <div class="chat-header">
-            <h5 class="fw-bold mb-0">💬 Chat Analítico</h5>
+            <h5 class="fw-bold mb-0"><i class="bi bi-chat-dots-fill me-2"></i>Chat Analítico</h5>
             <small class="opacity-75">Consultas rápidas sobre la población de pacientes</small>
         </div>
         
         <div class="chat-body" id="chatBody">
             <div class="message message-bot">
-                Hola, soy el asistente analítico de Keisy. ¿En qué puedo ayudarte hoy?
+                <i class="bi bi-robot me-2"></i>Hola, soy el asistente analítico de Keisy. ¿En qué puedo ayudarte hoy?
             </div>
             
             {% if query %}
@@ -125,7 +125,7 @@
             </form>
             
             <div class="suggested-queries">
-                <span class="small text-muted w-100 mb-1">Consultas sugeridas:</span>
+                <span class="small text-muted w-100 mb-1"><i class="bi bi-lightbulb me-1"></i>Consultas sugeridas:</span>
                 <a href="?q=¿Cuántos pacientes críticos hay?" class="query-tag">¿Pacientes críticos?</a>
                 <a href="?q=¿Cuál es el promedio de edad?" class="query-tag">Edad promedio</a>
                 <a href="?q=¿Cuántos hipertensos hay?" class="query-tag">Hipertensos</a>

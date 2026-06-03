@@ -29,31 +29,36 @@
 {% block content %}
 <div class="row g-4 mb-5">
     <div class="col-md">
-        <div class="kpi-card bg-kpi-1">
+        <div class="kpi-card bg-kpi-1 transition-hover">
+            <div class="mb-2"><i class="bi bi-people-fill fs-4"></i></div>
             <span class="kpi-title">Total Pacientes</span>
             <span class="kpi-value">{{ total_patients }}</span>
         </div>
     </div>
     <div class="col-md">
-        <div class="kpi-card bg-kpi-2">
+        <div class="kpi-card bg-kpi-2 transition-hover">
+            <div class="mb-2"><i class="bi bi-heart-pulse-fill fs-4"></i></div>
             <span class="kpi-title">Hipertensos</span>
             <span class="kpi-value">{{ hypertensive_count }}</span>
         </div>
     </div>
     <div class="col-md">
-        <div class="kpi-card bg-kpi-3">
+        <div class="kpi-card bg-kpi-3 transition-hover">
+            <div class="mb-2"><i class="bi bi-droplet-fill fs-4"></i></div>
             <span class="kpi-title">Diabéticos</span>
             <span class="kpi-value">{{ diabetic_count }}</span>
         </div>
     </div>
     <div class="col-md">
-        <div class="kpi-card bg-kpi-4">
+        <div class="kpi-card bg-kpi-4 transition-hover">
+            <div class="mb-2"><i class="bi bi-lungs-fill fs-4"></i></div>
             <span class="kpi-title">Fumadores</span>
             <span class="kpi-value">{{ smoker_count }}</span>
         </div>
     </div>
     <div class="col-md">
-        <div class="kpi-card bg-kpi-5">
+        <div class="kpi-card bg-kpi-5 transition-hover">
+            <div class="mb-2"><i class="bi bi-exclamation-triangle-fill fs-4"></i></div>
             <span class="kpi-title">Riesgo Promedio</span>
             <span class="kpi-value" style="font-size: 1.5rem;">{{ avg_risk_label }}</span>
         </div>
@@ -63,7 +68,7 @@
 <div class="row g-4 mb-5">
     <div class="col-lg-12">
         <div class="card-custom">
-            <h5 class="fw-bold mb-4 text-primary-dark">Estadísticas Descriptivas</h5>
+            <h5 class="fw-bold mb-4 text-primary-dark"><i class="bi bi-graph-up-arrow me-2"></i>Estadísticas Descriptivas</h5>
             <div class="table-responsive">
                 <table class="table stats-table align-middle">
                     <thead>
@@ -95,25 +100,25 @@
 <div class="row g-4">
     <div class="col-md-6">
         <div class="card-custom h-100">
-            <h6 class="fw-bold mb-4 text-primary-dark">Segmentación por Edad</h6>
+            <h6 class="fw-bold mb-4 text-primary-dark"><i class="bi bi-calendar-event me-2"></i>Segmentación por Edad</h6>
             <canvas id="ageSegmentationChart"></canvas>
         </div>
     </div>
     <div class="col-md-6">
         <div class="card-custom h-100">
-            <h6 class="fw-bold mb-4 text-primary-dark">Segmentación por Sexo</h6>
+            <h6 class="fw-bold mb-4 text-primary-dark"><i class="bi bi-gender-ambiguous me-2"></i>Segmentación por Sexo</h6>
             <canvas id="sexSegmentationChart"></canvas>
         </div>
     </div>
     <div class="col-md-6">
         <div class="card-custom h-100">
-            <h6 class="fw-bold mb-4 text-primary-dark">Segmentación por IMC</h6>
+            <h6 class="fw-bold mb-4 text-primary-dark"><i class="bi bi-speedometer2 me-2"></i>Segmentación por IMC</h6>
             <canvas id="imcSegmentationChart"></canvas>
         </div>
     </div>
     <div class="col-md-6">
         <div class="card-custom h-100">
-            <h6 class="fw-bold mb-4 text-primary-dark">Segmentación por Riesgo</h6>
+            <h6 class="fw-bold mb-4 text-primary-dark"><i class="bi bi-shield-exclamation me-2"></i>Segmentación por Riesgo</h6>
             <canvas id="riskSegmentationChart"></canvas>
         </div>
     </div>
