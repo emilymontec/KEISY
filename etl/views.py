@@ -112,4 +112,4 @@ def upload_csv(request):
 
         return redirect("upload_csv")
 
-    return render(request, "views/upload.html", _upload_page_context())
+    return render(request, "etl/upload_csv.html", _upload_page_context())

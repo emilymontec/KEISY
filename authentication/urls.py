@@ -4,7 +4,7 @@ from .views import custom_logout, favicon_view
 
 urlpatterns = [
     path('login/', auth_views.LoginView.as_view(
-        template_name='views/login.html',
+        template_name='authentication/login.html',
         redirect_authenticated_user=True
     ), name='login'),
     path('logout/', custom_logout, name='logout'),

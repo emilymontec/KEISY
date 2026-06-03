@@ -22,7 +22,7 @@ def predict_individual(request):
         except (ValueError, TypeError):
             messages.error(request, "Por favor, ingresa valores válidos en todos los campos.")
             
-    return render(request, 'ml/predict.html', {'result': result})
+    return render(request, 'ml/predict_individual.html', {'result': result})
 
 @login_required
 def train_model_view(request):
@@ -31,4 +31,4 @@ def train_model_view(request):
         messages.success(request, msg)
     else:
         messages.error(request, msg)
-    return render(request, 'ml/predict.html')
+    return render(request, 'ml/predict_individual.html')

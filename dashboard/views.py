@@ -92,7 +92,7 @@ def home(request):
         "top_diagnoses": top_diagnoses,
     }
 
-    return render(request, "index.html", context)
+    return render(request, "dashboard/index.html", context)
 
 
 @login_required
@@ -139,7 +139,7 @@ def alert_center(request):
         'patient_alerts': patient_alerts,
         'top_10_patients': top_10_patients,
     }
-    return render(request, 'views/alert_center.html', context)
+    return render(request, 'patients/alert_center.html', context)
 
 
 @login_required
@@ -186,4 +186,4 @@ def admin_panel(request):
         ).count(),
         "total_uploads": UploadedDataset.objects.count(),
     }
-    return render(request, "views/admin_panel.html", context)
+    return render(request, "patients/patient_list.html", context)

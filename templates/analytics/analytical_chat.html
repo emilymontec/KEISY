@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Keisy Medical | Chat Analítico{% endblock %}
+{% block title %}Keisy Medical | Asistente Virtual AI{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -148,7 +149,7 @@
                     <i class="bi bi-robot"></i>
                 </div>
                 <div>
-                    <h5 class="fw-bold mb-0">Asistente Keisy</h5>
+                    <h5 class="fw-bold mb-0">Keisy AI</h5>
                     <div class="d-flex align-items-center gap-1">
                         <span class="bg-success rounded-circle" style="width: 8px; height: 8px;"></span>
                         <small class="opacity-75" style="font-size: 0.75rem;">En línea • Analizando datos</small>
@@ -202,10 +203,13 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
-    // Auto scroll al final del chat
-    const chatBody = document.getElementById('chatBody');
-    chatBody.scrollTop = chatBody.scrollHeight;
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatBody = document.getElementById('chatBody');
+        chatBody.scrollTop = chatBody.scrollHeight;
+    });
 </script>
 {% endblock %}

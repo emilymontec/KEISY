@@ -114,4 +114,4 @@ def analytical_chat(request):
         else:
             answer = "Lo siento, no tengo una respuesta predefinida para esa consulta. Prueba preguntando por pacientes críticos, hipertensos, diabéticos o promedios generales."
 
-    return render(request, 'analytics/chat.html', {'answer': answer, 'query': query})
+    return render(request, 'analytics/analytical_chat.html', {'answer': answer, 'query': query})
