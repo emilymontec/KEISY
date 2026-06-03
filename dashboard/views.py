@@ -2,6 +2,9 @@ from django.db.models import Avg, Q, Count
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db.models.functions import TruncDay
+from django.utils import timezone
+from datetime import timedelta
 import json
 
 from etl.models import UploadedDataset
@@ -28,6 +31,26 @@ def home(request):
     # Diagnósticos frecuentes
     top_diagnoses = list(Patient.objects.values('diagnostico').annotate(total=Count('id')).order_by('-total')[:5])
     
+    # Evolución Temporal (Últimos 30 días de pacientes críticos)
+    today = timezone.now().date()
+    start_date = today - timedelta(days=29)
+    
+    evolution_qs = Patient.objects.filter(
+        riesgo="CRITICO",
+        created_at__date__gte=start_date
+    ).annotate(day=TruncDay('created_at')).values('day').annotate(total=Count('id')).order_by('day')
+    
+    # Mapear los datos a un diccionario para fácil acceso
+    evolution_map = {item['day'].date(): item['total'] for item in evolution_qs}
+    
+    evolution_labels = []
+    evolution_counts = []
+    
+    for i in range(30):
+        current_date = start_date + timedelta(days=i)
+        evolution_labels.append(current_date.strftime('%d/%m'))
+        evolution_counts.append(evolution_map.get(current_date, 0))
+
     # Datos para gráficas (JSON)
     chart_data = {
         "gender": {
@@ -41,6 +64,10 @@ def home(request):
         "diagnoses": {
             "labels": [d['diagnostico'] for d in top_diagnoses],
             "data": [d['total'] for d in top_diagnoses]
+        },
+        "evolution": {
+            "labels": evolution_labels,
+            "data": evolution_counts
         }
     }
 

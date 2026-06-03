@@ -186,6 +186,15 @@
         </div>
     </div>
 </div>
+
+<div class="row g-4 mt-2 mb-5">
+    <div class="col-12">
+        <div class="card-custom">
+            <h6 class="fw-bold mb-3 text-primary-dark">Evolución Temporal: Pacientes Críticos (Últimos 30 días)</h6>
+            <canvas id="evolutionChart" style="max-height: 350px; width: 100%;"></canvas>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -245,6 +254,49 @@
             responsive: true, 
             plugins: { legend: { display: false } },
             scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+
+    // Gráfica de Líneas: Evolución Temporal
+    new Chart(document.getElementById('evolutionChart'), {
+        type: 'line',
+        data: {
+            labels: chartData.evolution.labels,
+            datasets: [{
+                label: 'Pacientes Críticos',
+                data: chartData.evolution.data,
+                borderColor: '#dc2626',
+                backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                pointBackgroundColor: '#dc2626'
+            }]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Pacientes Críticos: ' + context.parsed.y;
+                        }
+                    }
+                }
+            },
+            scales: { 
+                y: { 
+                    beginAtZero: true, 
+                    ticks: { stepSize: 1 },
+                    title: { display: true, text: 'Cantidad de Pacientes' }
+                },
+                x: { 
+                    grid: { display: false },
+                    title: { display: true, text: 'Día/Mes' }
+                }
+            }
         }
     });
 </script>
