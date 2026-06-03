@@ -66,6 +66,18 @@
                         <p class="text-muted">{{ object.diagnostico|default:"Sin diagnóstico registrado." }}</p>
                     </div>
                     
+                    <!-- Recomendaciones Automáticas -->
+                    <div class="mt-4 p-3 rounded-4 bg-primary bg-opacity-10 border border-primary border-opacity-25">
+                        <label class="small text-primary-dark text-uppercase fw-bold d-block mb-2">💡 Recomendaciones Automáticas</label>
+                        <ul class="list-unstyled mb-0">
+                            {% for rec in object.get_recommendations %}
+                                <li class="small text-primary-dark d-flex align-items-start mb-2">
+                                    <span class="me-2">🔹</span> {{ rec }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    
                     <!-- Explicación del Riesgo (Explainable AI simple) -->
                     <div class="mt-4 p-3 rounded-4 bg-light border">
                         <label class="small text-muted text-uppercase fw-bold d-block mb-2">Análisis de Riesgo (Factores detectados)</label>

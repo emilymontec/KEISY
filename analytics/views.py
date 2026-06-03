@@ -82,3 +82,36 @@ def clinical_analytics(request):
     }
 
     return render(request, 'analytics/clinical_analytics.html', context)
+
+@login_required
+def analytical_chat(request):
+    answer = None
+    query = request.GET.get('q', '').lower().strip()
+    
+    if query:
+        # Lógica de respuestas predefinidas (Chat Analítico sin LLM)
+        if 'cuántos pacientes críticos' in query or 'cuantos pacientes criticos' in query:
+            count = Patient.objects.filter(riesgo='CRITICO').count()
+            answer = f"Actualmente existen {count} pacientes críticos."
+        elif 'cuántos pacientes hay' in query or 'cuantos pacientes hay' in query or 'total de pacientes' in query:
+            count = Patient.objects.count()
+            answer = f"El sistema tiene registrados un total de {count} pacientes."
+        elif 'riesgo alto' in query:
+            count = Patient.objects.filter(riesgo='ALTO').count()
+            answer = f"Hay {count} pacientes clasificados con riesgo alto."
+        elif 'diabéticos' in query or 'diabeticos' in query:
+            count = Patient.objects.filter(es_diabetico=True).count()
+            answer = f"Se han identificado {count} pacientes con diagnóstico de diabetes."
+        elif 'hipertensos' in query:
+            count = Patient.objects.filter(es_hipertenso=True).count()
+            answer = f"Contamos con {count} pacientes hipertensos registrados."
+        elif 'promedio de edad' in query or 'edad promedio' in query:
+            avg_age = Patient.objects.aggregate(Avg('edad'))['edad__avg']
+            answer = f"La edad promedio de los pacientes es de {round(avg_age, 1)} años."
+        elif 'imc promedio' in query or 'promedio de imc' in query:
+            avg_imc = Patient.objects.aggregate(Avg('imc'))['imc__avg']
+            answer = f"El índice de masa corporal (IMC) promedio es de {round(avg_imc, 2)}."
+        else:
+            answer = "Lo siento, no tengo una respuesta predefinida para esa consulta. Prueba preguntando por pacientes críticos, hipertensos, diabéticos o promedios generales."
+
+    return render(request, 'analytics/chat.html', {'answer': answer, 'query': query})

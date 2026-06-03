@@ -82,6 +82,35 @@ class Patient(models.Model):
 
         return alerts
 
+    def get_recommendations(self):
+        recommendations = []
+        
+        # Reglas basadas en el ejemplo y criterios clínicos comunes
+        if self.es_fumador and self.imc > 30:
+            recommendations.append("Aumentar actividad física de bajo impacto")
+            recommendations.append("Control médico prioritario para cesación tabáquica y nutrición")
+        
+        if self.glucosa > 126 or self.es_diabetico:
+            recommendations.append("Reducir ingesta de azúcares simples y carbohidratos refinados")
+            recommendations.append("Monitoreo diario de glucemia capilar")
+            
+        if self.presion_sistolica > 140 or self.es_hipertenso:
+            recommendations.append("Reducir consumo de sodio (sal)")
+            recommendations.append("Control periódico de presión arterial en reposo")
+            
+        if self.imc > 25:
+            recommendations.append("Plan de alimentación balanceado para control de peso")
+            
+        if self.riesgo == 'CRITICO':
+            recommendations.append("Evaluación inmediata por especialista")
+            recommendations.append("Reposo absoluto hasta estabilización de signos vitales")
+            
+        if not recommendations:
+            recommendations.append("Mantener hábitos de vida saludable")
+            recommendations.append("Control preventivo anual")
+            
+        return recommendations
+
     def get_risk_explanation(self):
         factors = []
         if self.glucosa > 126:

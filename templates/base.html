@@ -226,6 +226,9 @@
                             <a class="nav-link {% if request.resolver_match.url_name == 'clinical_analytics' %}active{% endif %}" href="{% url 'clinical_analytics' %}">Analítica</a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'analytical_chat' %}active{% endif %}" href="{% url 'analytical_chat' %}">Chat</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.url_name == 'predict_individual' %}active{% endif %}" href="{% url 'predict_individual' %}">Predicción AI</a>
                         </li>
                         {% endif %}
