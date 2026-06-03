@@ -107,7 +107,7 @@
                         <div class="d-flex justify-content-between align-items-start mb-3">
                             <div>
                                 <h6 class="fw-bold mb-1">
-                                    <a href="{% url 'patient_detail' item.patient.pk %}" class="text-decoration-none text-dark">
+                                    <a href="{% url 'patient_clinical_record' item.patient.pk %}" class="text-decoration-none text-dark">
                                         Paciente: {{ item.patient.nombres }} {{ item.patient.apellidos }}
                                     </a>
                                 </h6>
@@ -157,7 +157,7 @@
                             <span><i class="bi bi-activity me-1"></i>{{ patient.frecuencia_cardiaca|default:"--" }} lpm</span>
                         </div>
                     </div>
-                    <a href="{% url 'patient_detail' patient.id %}" class="view-btn-mini" title="Ver Ficha Clínica">
+                    <a href="{% url 'patient_clinical_record' patient.id %}" class="view-btn-mini" title="Ver Ficha Clínica">
                         <i class="bi bi-chevron-right"></i>
                     </a>
                 </div>

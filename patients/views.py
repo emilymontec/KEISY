@@ -1,6 +1,6 @@
 from django import forms
 from django.urls import reverse_lazy
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from .models import Patient, PatientAudit
 import json
@@ -75,6 +75,12 @@ class PatientDeleteView(PatientBaseView, UserPassesTestMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-class PatientDetailView(PatientBaseView, UpdateView): # Reusing update for view/edit
+class PatientDetailView(LoginRequiredMixin, DetailView):
+    model = Patient
     template_name = 'patients/patient_detail.html'
+    context_object_name = 'patient'
+
+class PatientClinicalRecordView(PatientDetailView):
+    """Vista de Ficha Clínica del paciente."""
+    pass
 

@@ -105,7 +105,7 @@
                     </thead>
                     <tbody>
                         {% for patient in recent_patients %}
-                        <tr>
+                        <tr style="cursor: pointer;" onclick="window.location='{% url 'patient_clinical_record' patient.id %}'">
                             <td>
                                 <div class="fw-bold text-primary-dark">{{ patient.nombres }} {{ patient.apellidos }}</div>
                                 <div class="text-muted small">{{ patient.created_at|date:"d/m/Y" }}</div>
