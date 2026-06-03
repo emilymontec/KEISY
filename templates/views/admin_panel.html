@@ -41,11 +41,24 @@
         <div class="card-custom mb-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h5 class="fw-bold mb-0 text-primary-dark">Listado de Pacientes</h5>
-                {% if user.is_superuser or user|has_group:"Administrador" or user|has_group:"Medico" %}
-                <a href="{% url 'patient_add' %}" class="btn btn-primary-custom py-2 px-3">
-                    + Nuevo Paciente
-                </a>
-                {% endif %}
+                <div class="d-flex gap-2">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary dropdown-toggle py-2 px-3" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-download me-1"></i> Exportar
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end rounded-4 shadow-sm border-0">
+                            <li><a class="dropdown-item small fw-bold" href="{% url 'export_patients' 'csv' %}"><i class="bi bi-filetype-csv me-2 text-primary"></i>CSV</a></li>
+                            <li><a class="dropdown-item small fw-bold" href="{% url 'export_patients' 'xlsx' %}"><i class="bi bi-file-earmark-excel me-2 text-success"></i>Excel (XLSX)</a></li>
+                            <li><a class="dropdown-item small fw-bold" href="{% url 'export_patients' 'pdf' %}"><i class="bi bi-file-pdf me-2 text-danger"></i>PDF</a></li>
+                            <li><a class="dropdown-item small fw-bold" href="{% url 'export_patients' 'json' %}"><i class="bi bi-filetype-json me-2 text-warning"></i>JSON</a></li>
+                        </ul>
+                    </div>
+                    {% if user.is_superuser or user|has_group:"Administrador" or user|has_group:"Medico" %}
+                    <a href="{% url 'patient_add' %}" class="btn btn-primary-custom py-2 px-3">
+                        <i class="bi bi-plus-lg me-1"></i> Nuevo Paciente
+                    </a>
+                    {% endif %}
+                </div>
             </div>
             
             <form method="GET" class="row g-2 mb-4">
@@ -205,7 +218,7 @@
 
         <div class="card-custom border-0" style="background: linear-gradient(135deg, rgba(6, 151, 170, 0.1) 0%, rgba(4, 75, 153, 0.05) 100%);">
             <h6 class="fw-bold mb-2 text-primary-dark"><i class="bi bi-info-circle-fill me-2"></i>Gestión de Datos</h6>
-            <p class="text-muted small mb-0">Utilice el módulo de carga ETL para actualizar la base de datos de pacientes mediante archivos CSV estandarizados.</p>
+            <p class="text-muted small mb-0">Utilice el módulo de carga ETL para actualizar la base de datos de pacientes mediante archivos estandarizados (CSV, XLSX, JSON).</p>
         </div>
     </div>
 </div>

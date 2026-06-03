@@ -79,24 +79,17 @@
         .navbar-brand {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             font-weight: 800;
             color: var(--primary-dark) !important;
             letter-spacing: -0.5px;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
         }
 
-        .logo-icon-container {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-medium) 100%);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.2rem;
-            box-shadow: 0 4px 12px rgba(4, 75, 153, 0.2);
+        .logo-img {
+            height: 38px;
+            width: auto;
+            object-fit: contain;
         }
 
         .navbar-brand span { color: var(--accent-pink); }
@@ -104,25 +97,33 @@
         .nav-link {
             color: var(--text-main);
             font-weight: 600;
-            font-size: 0.95rem;
-            margin: 0 10px;
-            transition: color 0.3s;
-            position: relative;
+            font-size: 0.9rem;
+            margin: 0 4px;
+            padding: 8px 12px !important;
+            border-radius: 10px;
+            transition: all 0.2s ease;
         }
 
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: -2px;
-            left: 0;
-            background-color: var(--accent-pink);
-            transition: width 0.3s ease;
+        .nav-link:hover, .nav-link.active { 
+            color: var(--primary-medium) !important;
+            background-color: rgba(6, 151, 170, 0.05);
         }
 
-        .nav-link:hover::after, .nav-link.active::after { width: 100%; }
-        .nav-link:hover, .nav-link.active { color: var(--accent-pink) !important; }
+        .nav-link::after { display: none; }
+
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            padding: 10px;
+        }
+
+        .dropdown-item {
+            border-radius: 8px;
+            padding: 8px 15px;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
 
         .btn-header {
             background-color: transparent;
@@ -207,9 +208,7 @@
         <nav class="navbar navbar-expand-lg py-3">
             <div class="container">
                 <a class="navbar-brand" href="{% url 'home' %}">
-                    <div class="logo-icon-container">
-                        <i class="bi bi-heart-pulse-fill"></i>
-                    </div>
+                    <img src="{% static 'assets/keisy.png' %}" alt="Keisy Logo" class="logo-img">
                     Keisy<span>Medical</span>
                 </a>
                 
@@ -222,42 +221,33 @@
                         {% if user.is_authenticated %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}">
-                                <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                                <i class="bi bi-speedometer2 me-1"></i>Inicio
                             </a>
                         </li>
                         
-                        {% if user.is_superuser or user|has_group:"Administrador" or user|has_group:"Medico" %}
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'upload_csv' %}active{% endif %}" href="{% url 'upload_csv' %}">
-                                <i class="bi bi-cloud-upload me-1"></i>Carga CSV
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle {% if request.resolver_match.url_name == 'admin_panel' or request.resolver_match.url_name == 'upload_csv' %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-people me-1"></i>Pacientes
                             </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'admin_panel' %}"><i class="bi bi-list-ul me-2"></i>Listado General</a></li>
+                                {% if user.is_superuser or user|has_group:"Administrador" or user|has_group:"Medico" %}
+                                <li><a class="dropdown-item" href="{% url 'upload_csv' %}"><i class="bi bi-cloud-upload me-2"></i>Cargar Datos</a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'alert_center' %}"><i class="bi bi-bell me-2"></i>Alertas Clínicas</a></li>
+                            </ul>
                         </li>
-                        {% endif %}
 
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'admin_panel' %}active{% endif %}" href="{% url 'admin_panel' %}">
-                                <i class="bi bi-grid me-1"></i>Panel Clínico
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle {% if request.resolver_match.url_name == 'clinical_analytics' or request.resolver_match.url_name == 'analytical_chat' or request.resolver_match.url_name == 'predict_individual' %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-graph-up-arrow me-1"></i>Inteligencia
                             </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'alert_center' %}active{% endif %}" href="{% url 'alert_center' %}">
-                                <i class="bi bi-bell me-1"></i>Alertas
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'clinical_analytics' %}active{% endif %}" href="{% url 'clinical_analytics' %}">
-                                <i class="bi bi-bar-chart me-1"></i>Analítica
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'analytical_chat' %}active{% endif %}" href="{% url 'analytical_chat' %}">
-                                <i class="bi bi-chat-dots me-1"></i>Chat
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'predict_individual' %}active{% endif %}" href="{% url 'predict_individual' %}">
-                                <i class="bi bi-cpu me-1"></i>Predicción AI
-                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'clinical_analytics' %}"><i class="bi bi-bar-chart me-2"></i>Analítica Avanzada</a></li>
+                                <li><a class="dropdown-item" href="{% url 'predict_individual' %}"><i class="bi bi-cpu me-2"></i>Predicción AI</a></li>
+                                <li><a class="dropdown-item" href="{% url 'analytical_chat' %}"><i class="bi bi-chat-dots me-2"></i>Asistente Virtual</a></li>
+                            </ul>
                         </li>
                         {% endif %}
                     </ul>

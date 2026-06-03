@@ -1,5 +1,5 @@
 import pandas as pd
-
+from pathlib import Path
 from patients.models import Patient
 
 
@@ -26,7 +26,22 @@ class ETLService:
 
     @staticmethod
     def extract(file_path):
-        return pd.read_csv(file_path)
+        ext = Path(file_path).suffix.lower()
+        try:
+            if ext == '.csv':
+                return pd.read_csv(file_path)
+            elif ext == '.xlsx':
+                return pd.read_excel(file_path, engine='openpyxl')
+            elif ext == '.json':
+                # Intentar leer como lista de registros primero
+                try:
+                    return pd.read_json(file_path)
+                except Exception:
+                    return pd.read_json(file_path, orient='records')
+            else:
+                raise ValueError(f"Formato de archivo no soportado: {ext}")
+        except Exception as e:
+            raise ValueError(f"Error al leer el archivo {ext}: {str(e)}")
 
     @classmethod
     def transform(cls, df):
@@ -139,7 +154,7 @@ class ETLService:
         if missing_columns:
             missing_as_text = ", ".join(missing_columns)
             raise ValueError(
-                f"Faltan columnas requeridas en el CSV: {missing_as_text}"
+                f"Faltan columnas requeridas: {missing_as_text}"
             )
 
     @staticmethod

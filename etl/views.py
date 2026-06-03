@@ -64,22 +64,22 @@ def upload_csv(request):
                 messages.error(request, f"Error al generar dataset: {str(exc)}")
             return redirect("upload_csv")
 
-        csv_file = request.FILES.get("file")
-        if not csv_file:
-            messages.error(request, "Selecciona un archivo CSV.")
+        uploaded_file = request.FILES.get("file")
+        if not uploaded_file:
+            messages.error(request, "Selecciona un archivo (CSV, XLSX o JSON).")
             return redirect("upload_csv")
 
         datasets_dir = Path("datasets")
         datasets_dir.mkdir(parents=True, exist_ok=True)
-        file_path = datasets_dir / csv_file.name
+        file_path = datasets_dir / uploaded_file.name
         upload_record = UploadedDataset.objects.create(
             user=request.user,
-            file_name=csv_file.name,
+            file_name=uploaded_file.name,
             stored_path=str(file_path),
         )
 
         with file_path.open("wb+") as destination:
-            for chunk in csv_file.chunks():
+            for chunk in uploaded_file.chunks():
                 destination.write(chunk)
 
         try:
@@ -107,7 +107,7 @@ def upload_csv(request):
             )
             messages.success(
                 request,
-                f"{total} pacientes procesados y guardados en la base de datos.",
+                f"{total} registros procesados y guardados en la base de datos.",
             )
 
         return redirect("upload_csv")
