@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 # Create your models here.
 
@@ -80,3 +81,32 @@ class Patient(models.Model):
             alerts.append({'type': 'MEDIO', 'msg': f'Obesidad grado II/III: IMC {self.imc}'})
 
         return alerts
+
+    def get_risk_explanation(self):
+        factors = []
+        if self.glucosa > 126:
+            factors.append("Glucosa elevada")
+        if self.imc > 30:
+            factors.append("IMC obesidad")
+        if self.presion_sistolica > 140:
+            factors.append("Presión sistólica alta")
+        if self.es_fumador:
+            factors.append("Hábito tabáquico")
+        if self.es_diabetico:
+            factors.append("Antecedente de diabetes")
+        if self.es_hipertenso:
+            factors.append("Antecedente de hipertensión")
+        if self.saturacion_oxigeno < 90:
+            factors.append("Saturación de oxígeno baja")
+        
+        return factors
+
+class PatientAudit(models.Model):
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='audit_logs')
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    action = models.CharField(max_length=50) # Created, Updated, Deleted
+    changes = models.JSONField(null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.patient} - {self.action} by {self.user} at {self.timestamp}"

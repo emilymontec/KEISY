@@ -107,7 +107,16 @@
                                 <span class="text-muted small">{{ patient.get_sexo_display }}</span>
                             </td>
                             <td><span class="fw-bold text-muted">{{ patient.imc|floatformat:1 }}</span></td>
-                            <td><span class="risk-pill risk-{{ patient.riesgo|lower }}">{{ patient.riesgo }}</span></td>
+                            <td>
+                                <span class="risk-pill risk-{{ patient.riesgo|lower }} d-inline-block" title="Factores: {{ patient.get_risk_explanation|join:', ' }}">
+                                    {{ patient.riesgo }}
+                                </span>
+                                {% if patient.riesgo != 'BAJO' %}
+                                <div class="text-muted" style="font-size: 0.65rem; line-height: 1.2; margin-top: 4px; max-width: 120px;">
+                                    {{ patient.get_risk_explanation|slice:":2"|join:", " }}{% if patient.get_risk_explanation|length > 2 %}...{% endif %}
+                                </div>
+                                {% endif %}
+                            </td>
                             {% if user.is_superuser or user|has_group:"Administrador" or user|has_group:"Medico" %}
                             <td>
                                 <div class="d-flex gap-2">
