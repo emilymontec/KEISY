@@ -44,21 +44,18 @@ def upload_csv(request):
                     rows_received=len(df)
                 )
                 
-                df_transformed = ETLService.transform(df)
-                df_transformed["riesgo"] = df_transformed.apply(
-                    ETLService.classify_risk,
-                    axis=1,
-                )
+                df_transformed, etl_logs = ETLService.transform(df)
                 total = ETLService.load(df_transformed)
                 
                 execution_time = round(time.time() - start_time, 2)
+                notes = f"Simulado. Duplicados: {etl_logs['duplicates_removed']}, Imputados: {etl_logs['nulls_imputed']}"
                 upload_record.mark_processed(
                     rows_processed=len(df_transformed),
                     rows_inserted=total,
                     execution_time=execution_time,
-                    notes="Dataset simulado generado y cargado.",
+                    notes=notes,
                 )
-                messages.success(request, f"Dataset simulado generado: {total} registros cargados.")
+                messages.success(request, f"Simulado: {total} registros (Limpieza: {etl_logs['duplicates_removed']} dupl. eliminados).")
             except Exception as exc:
                 execution_time = round(time.time() - start_time, 2)
                 messages.error(request, f"Error al generar dataset: {str(exc)}")
@@ -86,28 +83,25 @@ def upload_csv(request):
             df = ETLService.extract(file_path)
             upload_record.rows_received = len(df)
             upload_record.save(update_fields=["rows_received"])
-            df = ETLService.transform(df)
-            df["riesgo"] = df.apply(
-                ETLService.classify_risk,
-                axis=1,
-            )
-
-            total = ETLService.load(df)
+            
+            df_transformed, etl_logs = ETLService.transform(df)
+            total = ETLService.load(df_transformed)
         except Exception as exc:
             execution_time = round(time.time() - start_time, 2)
             upload_record.mark_error(str(exc), execution_time=execution_time)
             messages.error(request, str(exc))
         else:
             execution_time = round(time.time() - start_time, 2)
+            notes = f"Carga web. Duplicados: {etl_logs['duplicates_removed']}, Imputados: {etl_logs['nulls_imputed']}, Coerced: {etl_logs['errors_coerced']}"
             upload_record.mark_processed(
-                rows_processed=len(df),
+                rows_processed=len(df_transformed),
                 rows_inserted=total,
                 execution_time=execution_time,
-                notes="Carga completada desde la interfaz web.",
+                notes=notes,
             )
             messages.success(
                 request,
-                f"{total} registros procesados y guardados en la base de datos.",
+                f"{total} registros procesados. (Duplicados eliminados: {etl_logs['duplicates_removed']})",
             )
 
         return redirect("upload_csv")

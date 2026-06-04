@@ -1,4 +1,7 @@
 import pandas as pd
+import numpy as np
+import unicodedata
+import re
 from pathlib import Path
 from patients.models import Patient
 
@@ -7,21 +10,18 @@ class ETLService:
     REQUIRED_COLUMNS = [
         "nombres",
         "apellidos",
-        "documento",
         "edad",
         "sexo",
         "peso",
         "altura",
         "glucosa",
         "colesterol",
-        "diagnostico",
     ]
+    
     NUMERIC_COLUMNS = [
-        "edad",
-        "peso",
-        "altura",
-        "glucosa",
-        "colesterol",
+        "edad", "peso", "altura", "glucosa", "colesterol", 
+        "presion_sistolica", "presion_diastolica", "frecuencia_cardiaca", 
+        "saturacion_oxigeno", "imc"
     ]
 
     @staticmethod
@@ -45,73 +45,120 @@ class ETLService:
 
     @classmethod
     def transform(cls, df):
-        cls._validate_columns(df)
+        logs = {
+            "total_received": len(df),
+            "duplicates_removed": 0,
+            "nulls_imputed": 0,
+            "errors_coerced": 0,
+            "transformed": 0
+        }
 
-        # 1. Eliminar duplicados
-        cleaned_df = df.copy().drop_duplicates().reset_index(drop=True)
+        # 1. Normalizar nombres de columnas (quitar acentos, espacios, lowercase)
+        df.columns = [cls._clean_column_name(col) for col in df.columns]
 
-        # 2. Convertir tipos de datos y Corregir valores nulos
-        for column in cls.NUMERIC_COLUMNS:
-            cleaned_df[column] = pd.to_numeric(
-                cleaned_df[column],
-                errors="coerce",
-            )
+        # 2. Renombrado específico solicitado
+        rename_map = {
+            "imc_column": "imc", # En caso de que venga como IMC (ya limpiado a imc)
+            "presion_sistolica_column": "presion_sistolica",
+            "riesgo_enfermedad": "riesgo",
+            "diagnostico_preliminar": "diagnostico",
+            "saturacion_oxigeno_column": "saturacion_oxigeno",
+            "id_paciente": "documento"
+        }
+        # Aplicar renombrado manual para casos específicos que no sigan la limpieza simple
+        df = df.rename(columns={
+            "imc": "imc", 
+            "presion_sistolica": "presion_sistolica",
+            "riesgo_enfermedad": "riesgo",
+            "diagnostico_preliminar": "diagnostico"
+        })
 
-        numeric_medians = cleaned_df[cls.NUMERIC_COLUMNS].median(
-            numeric_only=True
-        )
-        cleaned_df[cls.NUMERIC_COLUMNS] = cleaned_df[
-            cls.NUMERIC_COLUMNS
-        ].fillna(numeric_medians).fillna(0)
+        # 3. Eliminar duplicados
+        initial_len = len(df)
+        df = df.drop_duplicates().reset_index(drop=True)
+        logs["duplicates_removed"] = initial_len - len(df)
 
-        # Evita divisiones por cero al calcular el IMC.
-        cleaned_df["altura"] = cleaned_df["altura"].replace(0, pd.NA)
-        cleaned_df["altura"] = cleaned_df["altura"].fillna(
-            cleaned_df["altura"].median()
-        )
-        if cleaned_df["altura"].isna().any():
-            cleaned_df["altura"] = cleaned_df["altura"].fillna(1.70) # Valor por defecto seguro
+        # 4. Convertir tipos numéricos (coerce)
+        for col in cls.NUMERIC_COLUMNS:
+            if col in df.columns:
+                # Contar cuántos fallarán la conversión para el log
+                pre_nulls = df[col].isna().sum()
+                df[col] = pd.to_numeric(df[col], errors='coerce')
+                post_nulls = df[col].isna().sum()
+                logs["errors_coerced"] += (post_nulls - pre_nulls)
 
-        cleaned_df["edad"] = cleaned_df["edad"].round().astype(int)
+        # 5. Imputar valores nulos con la mediana
+        for col in cls.NUMERIC_COLUMNS:
+            if col in df.columns:
+                null_count = df[col].isna().sum()
+                if null_count > 0:
+                    median_val = df[col].median()
+                    # Si la mediana es NaN (toda la columna nula), usar un valor por defecto
+                    if pd.isna(median_val):
+                        defaults = {"altura": 1.70, "peso": 70, "edad": 40, "glucosa": 100, "presion_sistolica": 120}
+                        median_val = defaults.get(col, 0)
+                    df[col] = df[col].fillna(median_val)
+                    logs["nulls_imputed"] += null_count
+
+        # 6. Generar documento si no existe
+        if "documento" not in df.columns or df["documento"].isna().all():
+            df["documento"] = [f"GEN-{1000000 + i}" for i in range(len(df))]
         
-        # 3. Estandarizar sexo
-        cleaned_df["sexo"] = cleaned_df["sexo"].apply(
-            cls._normalize_sex
-        )
+        # 7. Recalcular IMC: peso / (altura^2)
+        # Asegurar que altura no sea 0 para evitar error
+        df["altura"] = df["altura"].replace(0, 1.70)
+        df["imc"] = (df["peso"] / (df["altura" ] ** 2)).round(2)
 
-        # 4. Corregir diagnósticos comunes
-        cleaned_df["diagnostico"] = cleaned_df["diagnostico"].apply(
-            cls._normalize_diagnosis
-        )
+        # 8. Normalizar Sexo
+        if "sexo" in df.columns:
+            df["sexo"] = df["sexo"].apply(cls._normalize_sex)
 
-        # Calcular IMC
-        cleaned_df["imc"] = (
-            cleaned_df["peso"] / (cleaned_df["altura"] ** 2)
-        ).round(2)
+        # 9. Corregir diagnósticos (Hipertensión)
+        if "diagnostico" in df.columns:
+            df["diagnostico"] = df["diagnostico"].apply(cls._normalize_diagnosis)
+        else:
+            df["diagnostico"] = "Pendiente de evaluación"
 
-        return cleaned_df
+        # 10. Clasificar riesgo automáticamente
+        df["riesgo"] = df.apply(cls.classify_risk, axis=1)
+
+        logs["transformed"] = len(df)
+        print(f"ETL LOGS: {logs}") # Opcional: usar un logger real
+        return df, logs
+
+    @staticmethod
+    def _clean_column_name(name):
+        """Elimina acentos, caracteres especiales y normaliza a lowercase."""
+        if not isinstance(name, str):
+            return str(name)
+        # Quitar acentos
+        nfkd_form = unicodedata.normalize('NFKD', name)
+        name = "".join([c for c in nfkd_form if not unicodedata.combining(c)])
+        # A minúsculas y reemplazar espacios/especiales por guion bajo
+        name = name.lower().strip()
+        name = re.sub(r'[^\w\s]', '', name)
+        name = re.sub(r'\s+', '_', name)
+        return name
 
     @staticmethod
     def classify_risk(row):
-        # Reglas Críticas
-        if (row.get("presion_sistolica", 0) > 180 or 
-            row.get("glucosa", 0) > 300 or 
-            row.get("saturacion_oxigeno", 100) < 85):
+        # Prioridad CRITICO
+        if (row.get("glucosa", 0) > 300 or 
+            row.get("presion_sistolica", 0) > 180):
             return "CRITICO"
-
-        # Reglas Altas
-        if (row.get("presion_sistolica", 0) > 140 or 
-            row.get("glucosa", 0) > 126): # Umbral médico común para glucosa alta
+        
+        # ALTO
+        if (row.get("glucosa", 0) > 200 or 
+            row.get("presion_sistolica", 0) > 140 or
+            row.get("saturacion_oxigeno", 100) < 90):
             return "ALTO"
-
-        # Reglas Medias
-        if (row.get("imc", 0) > 25 or # Sobrepeso
-            row.get("es_hipertenso", False) or 
-            row.get("es_diabetico", False) or 
-            row.get("es_fumador", False)):
+        
+        # MEDIO
+        if (row.get("imc", 0) > 30 or 
+            row.get("colesterol", 0) > 240 or
+            row.get("frecuencia_cardiaca", 75) > 100):
             return "MEDIO"
-
-        # Regla Bajo
+            
         return "BAJO"
 
     @staticmethod
@@ -159,40 +206,24 @@ class ETLService:
 
     @staticmethod
     def _normalize_sex(value):
-        normalized = str(value).strip().upper()
-        sex_map = {
-            "M": "M",
-            "MASCULINO": "M",
-            "MALE": "M",
-            "F": "F",
-            "FEMENINO": "F",
-            "FEMALE": "F",
-        }
-
-        if normalized not in sex_map:
-            return "M" # Default or handle error
-
-        return sex_map[normalized]
+        val = str(value).strip().upper()
+        if val in ['M', 'MASCULINO', 'HOMBRE', 'MALE']:
+            return 'M'
+        if val in ['F', 'FEMENINO', 'MUJER', 'FEMALE']:
+            return 'F'
+        return 'M' # Default robusto
 
     @staticmethod
     def _normalize_diagnosis(value):
-        if pd.isna(value) or str(value).strip() == "":
-            return "Pendiente de evaluación"
+        if pd.isna(value): return "Sin diagnóstico"
+        val = str(value).strip().lower()
+        # Eliminar acentos para comparación
+        val = "".join([c for c in unicodedata.normalize('NFKD', val) if not unicodedata.combining(c)])
         
-        diag = str(value).strip().lower()
-        # Corregir diagnósticos comunes
-        corrections = {
-            "diabetes melitus": "Diabetes Mellitus",
-            "hipertension": "Hipertensión Arterial",
-            "hta": "Hipertensión Arterial",
-            "obesisad": "Obesidad",
-            "asms": "Asma",
-            "gastritis ": "Gastritis",
-        }
-        
-        for key, correct in corrections.items():
-            if key in diag:
-                return correct
+        if 'hipertencion' in val or 'hipertension' in val:
+            return "Hipertensión"
+        if 'diabetes' in val:
+            return "Diabetes"
         
         return str(value).strip().capitalize()
 
