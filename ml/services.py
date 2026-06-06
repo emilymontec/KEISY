@@ -75,9 +75,35 @@ class MLService:
         probabilities = model.predict_proba(X_input)[0]
         
         risk_labels = {0: 'BAJO', 1: 'MEDIO', 2: 'ALTO', 3: 'CRITICO'}
+        riesgo_final = risk_labels[prediction]
+        
+        # Identificar factores de riesgo específicos
+        factores = []
+        riesgos_especificos = []
+        
+        if glucose > 126: 
+            factores.append("Hiperglucemia (Glucosa elevada)")
+            riesgos_especificos.append("Diabetes Tipo 2")
+        if pressure > 140: 
+            factores.append("Hipertensión Arterial")
+            riesgos_especificos.append("Enfermedad Cardiovascular")
+        if imc > 30: 
+            factores.append("Obesidad (IMC elevado)")
+            riesgos_especificos.append("Síndrome Metabólico")
+        if age > 65: 
+            factores.append("Edad Avanzada (Factor de riesgo)")
+            riesgos_especificos.append("Complicaciones Geriátricas")
+        
+        # Determinar diagnóstico principal de riesgo
+        if riesgos_especificos:
+            diagnostico_riesgo = f"Riesgo de: {', '.join(set(riesgos_especificos))}"
+        else:
+            diagnostico_riesgo = "Sin riesgos patológicos específicos detectados"
         
         return {
-            'riesgo': risk_labels[prediction],
+            'riesgo': riesgo_final,
             'probabilidad': round(max(probabilities) * 100, 2),
-            'imc': imc
+            'imc': imc,
+            'factores': factores,
+            'diagnostico_riesgo': diagnostico_riesgo
         }, None

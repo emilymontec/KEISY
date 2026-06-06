@@ -86,18 +86,11 @@
             margin-bottom: 1.5rem;
         }
 
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            position: relative;
+        .logo-img {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
         }
-        .logo-icon::before, .logo-icon::after {
-            content: '';
-            position: absolute;
-            border-radius: 4px;
-        }
-        .logo-icon::before { width: 40px; height: 12px; top: 14px; left: 0; background-color: var(--accent-pink); transform: rotate(-15deg); }
-        .logo-icon::after { width: 12px; height: 40px; left: 14px; top: 0; background-color: var(--primary-dark); transform: rotate(-15deg); }
 
         .logo-text {
             font-size: 1.8rem;
@@ -168,7 +161,7 @@
             <span class="demo-badge">Versión Demo</span>
         </div>
         <div class="logo-container">
-            <div class="logo-icon"></div>
+            <img src="{% static 'assets/keisy.png' %}" class="logo-img" alt="Keisy Medical">
             <div class="logo-text">Keisy<span>Medical</span></div>
         </div>
         

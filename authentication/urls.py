@@ -1,6 +1,6 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
-from .views import custom_logout, favicon_view
+from .views import custom_logout, favicon_view, profile_view
 
 urlpatterns = [
     path('login/', auth_views.LoginView.as_view(
@@ -8,5 +8,6 @@ urlpatterns = [
         redirect_authenticated_user=True
     ), name='login'),
     path('logout/', custom_logout, name='logout'),
+    path('profile/', profile_view, name='profile'),
     path('favicon.ico', favicon_view, name='favicon'),
 ]

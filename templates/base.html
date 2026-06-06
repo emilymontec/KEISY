@@ -17,7 +17,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        /* --- PALETA DE COLORES (de example.html) --- */
+        
         :root {
             --primary-dark: #044b99;
             --primary-medium: #0697aa;
@@ -105,8 +105,8 @@
         }
 
         .nav-link:hover, .nav-link.active { 
-            color: var(--primary-medium) !important;
-            background-color: rgba(6, 151, 170, 0.05);
+            color: var(--primary-dark) !important;
+            background-color: rgba(4, 75, 153, 0.05);
         }
 
         .nav-link::after { display: none; }
@@ -214,7 +214,7 @@
         <nav class="navbar navbar-expand-lg py-3">
             <div class="container">
                 <a class="navbar-brand" href="{% url 'home' %}">
-                    <i class="bi bi-heart-pulse-fill text-primary-light"></i>
+                    <img src="{% static 'assets/keisy.png' %}" class="logo-img" alt="">
                     Keisy<span>Medical</span>
                 </a>
                 
@@ -252,7 +252,6 @@
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="{% url 'clinical_analytics' %}"><i class="bi bi-bar-chart me-2"></i>Analítica Avanzada</a></li>
                                 <li><a class="dropdown-item" href="{% url 'predict_individual' %}"><i class="bi bi-cpu me-2"></i>Predicción AI</a></li>
-                                <li><a class="dropdown-item" href="{% url 'analytical_chat' %}"><i class="bi bi-chat-dots me-2"></i>Asistente Virtual</a></li>
                             </ul>
                         </li>
                         {% endif %}
@@ -260,7 +259,12 @@
                     
                     <div class="d-flex align-items-center gap-3">
                         {% if user.is_authenticated %}
-                            <span class="text-muted small d-none d-md-inline">Hola, <strong>{{ user.username }}</strong></span>
+                            <a href="{% url 'profile' %}" class="text-decoration-none d-flex align-items-center gap-2">
+                                <div class="bg-primary-light rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                    {{ user.username|first|upper }}
+                                </div>
+                                <span class="text-muted small d-none d-md-inline">Hola, <strong>{{ user.username }}</strong></span>
+                            </a>
                             <a href="{% url 'logout' %}" class="btn-header">Cerrar Sesión</a>
                         {% else %}
                             <a href="{% url 'login' %}" class="btn-header">Acceso Personal</a>

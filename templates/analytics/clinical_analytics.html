@@ -23,6 +23,13 @@
     .bg-kpi-5 { background: linear-gradient(135deg, #ea580c, #f97316); }
 
     .stats-table th { background: rgba(6, 151, 170, 0.05); color: var(--primary-dark); font-size: 0.75rem; text-transform: uppercase; }
+
+    /* Reducir tamaño de gráficas */
+    .chart-container-small {
+        position: relative;
+        height: 250px;
+        width: 100%;
+    }
 </style>
 {% endblock %}
 
@@ -98,28 +105,36 @@
 </div>
 
 <div class="row g-4">
-    <div class="col-md-6">
+    <div class="col-md-6 col-lg-3">
         <div class="card-custom h-100">
-            <h6 class="fw-bold mb-4 text-primary-dark"><i class="bi bi-calendar-event me-2"></i>Segmentación por Edad</h6>
-            <canvas id="ageSegmentationChart"></canvas>
+            <h6 class="fw-bold mb-3 text-primary-dark small text-uppercase"><i class="bi bi-calendar-event me-2"></i>Edad</h6>
+            <div class="chart-container-small">
+                <canvas id="ageSegmentationChart"></canvas>
+            </div>
         </div>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-6 col-lg-3">
         <div class="card-custom h-100">
-            <h6 class="fw-bold mb-4 text-primary-dark"><i class="bi bi-gender-ambiguous me-2"></i>Segmentación por Sexo</h6>
-            <canvas id="sexSegmentationChart"></canvas>
+            <h6 class="fw-bold mb-3 text-primary-dark small text-uppercase"><i class="bi bi-gender-ambiguous me-2"></i>Sexo</h6>
+            <div class="chart-container-small">
+                <canvas id="sexSegmentationChart"></canvas>
+            </div>
         </div>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-6 col-lg-3">
         <div class="card-custom h-100">
-            <h6 class="fw-bold mb-4 text-primary-dark"><i class="bi bi-speedometer2 me-2"></i>Segmentación por IMC</h6>
-            <canvas id="imcSegmentationChart"></canvas>
+            <h6 class="fw-bold mb-3 text-primary-dark small text-uppercase"><i class="bi bi-speedometer2 me-2"></i>IMC</h6>
+            <div class="chart-container-small">
+                <canvas id="imcSegmentationChart"></canvas>
+            </div>
         </div>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-6 col-lg-3">
         <div class="card-custom h-100">
-            <h6 class="fw-bold mb-4 text-primary-dark"><i class="bi bi-shield-exclamation me-2"></i>Segmentación por Riesgo</h6>
-            <canvas id="riskSegmentationChart"></canvas>
+            <h6 class="fw-bold mb-3 text-primary-dark small text-uppercase"><i class="bi bi-shield-exclamation me-2"></i>Riesgo</h6>
+            <div class="chart-container-small">
+                <canvas id="riskSegmentationChart"></canvas>
+            </div>
         </div>
     </div>
 </div>
@@ -146,7 +161,18 @@
             },
             options: {
                 responsive: true,
-                plugins: { legend: { position: 'bottom', display: type === 'pie' || type === 'doughnut' } }
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { 
+                        position: 'bottom', 
+                        display: type === 'pie' || type === 'doughnut',
+                        labels: { boxWidth: 12, font: { size: 10 } }
+                    } 
+                },
+                scales: type === 'bar' ? {
+                    y: { beginAtZero: true, ticks: { font: { size: 10 } } },
+                    x: { ticks: { font: { size: 10 } } }
+                } : {}
             }
         });
     }
