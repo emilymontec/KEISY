@@ -323,7 +323,7 @@ Open a Pull Request describing the proposed changes.
 ---
 
 ## Author
-**Emily Monterrosa Castro - Full Stack Developer**
+**Emily Monterrosa Castro - Full Stack Developer** <br>
 [GitHub](https://github.com/emilymontec) · [LinkedIn](https://www.linkedin.com/in/emilymontec/) · [Portfolio](https://emilymontec.github.io/portfolio/)
 
 ---
