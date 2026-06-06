@@ -28,6 +28,11 @@ def upload_csv(request):
     if request.method == "POST":
         start_time = time.time()
         
+        if "reset_data" in request.POST:
+            ETLService.reset_all_data()
+            messages.success(request, "Todos los datos clínicos y registros de carga han sido eliminados.")
+            return redirect("upload_csv")
+
         if "generate_simulated" in request.POST:
             try:
                 df = ETLService.generate_simulated_dataset()
@@ -61,23 +66,52 @@ def upload_csv(request):
                 messages.error(request, f"Error al generar dataset: {str(exc)}")
             return redirect("upload_csv")
 
-        uploaded_file = request.FILES.get("file")
-        if not uploaded_file:
-            messages.error(request, "Selecciona un archivo (CSV, XLSX o JSON).")
-            return redirect("upload_csv")
+        # Manejo de confirmación de archivo repetido
+        is_confirmed = request.POST.get("confirm_upload") == "true"
+        pending_filename = request.POST.get("pending_filename")
+        
+        if is_confirmed and pending_filename:
+            file_path = Path("datasets") / pending_filename
+            file_hash = request.POST.get("file_hash")
+        else:
+            uploaded_file = request.FILES.get("file")
+            if not uploaded_file:
+                messages.error(request, "Selecciona un archivo (CSV, XLSX o JSON).")
+                return redirect("upload_csv")
 
-        datasets_dir = Path("datasets")
-        datasets_dir.mkdir(parents=True, exist_ok=True)
-        file_path = datasets_dir / uploaded_file.name
+            datasets_dir = Path("datasets")
+            datasets_dir.mkdir(parents=True, exist_ok=True)
+            file_path = datasets_dir / uploaded_file.name
+            
+            # Guardar temporalmente para calcular hash y verificar duplicados
+            with file_path.open("wb+") as destination:
+                for chunk in uploaded_file.chunks():
+                    destination.write(chunk)
+            
+            file_hash = ETLService.calculate_hash(file_path)
+            
+            # Verificar si el archivo ya existe
+            existing_file = UploadedDataset.objects.filter(file_name=uploaded_file.name).first()
+            
+            if existing_file:
+                if existing_file.file_hash == file_hash:
+                    messages.warning(request, f"El archivo '{uploaded_file.name}' ya fue cargado con el mismo contenido.")
+                else:
+                    messages.info(request, f"El archivo '{uploaded_file.name}' ya existe pero tiene contenido diferente.")
+                
+                # Pasar a la plantilla que se requiere confirmación
+                context = _upload_page_context()
+                context["pending_file"] = uploaded_file.name
+                context["file_hash"] = file_hash
+                return render(request, "etl/upload_csv.html", context)
+
+        # Si llegamos aquí, es una carga nueva o confirmada
         upload_record = UploadedDataset.objects.create(
             user=request.user,
-            file_name=uploaded_file.name,
+            file_name=file_path.name,
             stored_path=str(file_path),
+            file_hash=file_hash
         )
-
-        with file_path.open("wb+") as destination:
-            for chunk in uploaded_file.chunks():
-                destination.write(chunk)
 
         try:
             df = ETLService.extract(file_path)
@@ -101,7 +135,7 @@ def upload_csv(request):
             )
             messages.success(
                 request,
-                f"{total} registros procesados. (Duplicados eliminados: {etl_logs['duplicates_removed']})",
+                f"{total} registros procesados/actualizados. (Duplicados en archivo: {etl_logs['duplicates_removed']})",
             )
 
         return redirect("upload_csv")

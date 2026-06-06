@@ -2,11 +2,22 @@ import pandas as pd
 import numpy as np
 import unicodedata
 import re
+import hashlib
 from pathlib import Path
+
 from patients.models import Patient
 
 
 class ETLService:
+    @staticmethod
+    def calculate_hash(file_path):
+        """Calcula el hash SHA-256 de un archivo."""
+        sha256_hash = hashlib.sha256()
+        with open(file_path, "rb") as f:
+            for byte_block in iter(lambda: f.read(4096), b""):
+                sha256_hash.update(byte_block)
+        return sha256_hash.hexdigest()
+
     REQUIRED_COLUMNS = [
         "nombres",
         "apellidos",
@@ -100,9 +111,14 @@ class ETLService:
                     df[col] = df[col].fillna(median_val)
                     logs["nulls_imputed"] += null_count
 
-        # 6. Generar documento si no existe
-        if "documento" not in df.columns or df["documento"].isna().all():
+        # 6. Generar documento si no existe o es nulo
+        if "documento" not in df.columns:
             df["documento"] = [f"GEN-{1000000 + i}" for i in range(len(df))]
+        else:
+            # Rellenar solo los nulos
+            null_docs = df["documento"].isna()
+            if null_docs.any():
+                df.loc[null_docs, "documento"] = [f"GEN-{2000000 + i}" for i in range(null_docs.sum())]
         
         # 7. Recalcular IMC: peso / (altura^2)
         # Asegurar que altura no sea 0 para evitar error
@@ -163,33 +179,45 @@ class ETLService:
 
     @staticmethod
     def load(df):
-        patients = [
-            Patient(
-                nombres=row["nombres"],
-                apellidos=row["apellidos"],
-                documento=str(row["documento"]) if pd.notna(row["documento"]) else None,
-                edad=int(row["edad"]),
-                sexo=row["sexo"],
-                peso=float(row["peso"]),
-                altura=float(row["altura"]),
-                imc=float(row["imc"]),
-                glucosa=float(row["glucosa"]),
-                colesterol=float(row["colesterol"]),
-                presion_sistolica=int(row.get("presion_sistolica", 120)),
-                presion_diastolica=int(row.get("presion_diastolica", 80)),
-                saturacion_oxigeno=float(row.get("saturacion_oxigeno", 95)),
-                frecuencia_cardiaca=int(row.get("frecuencia_cardiaca", 75)),
-                diagnostico=row["diagnostico"],
-                es_hipertenso=row.get("es_hipertenso", False),
-                es_diabetico=row.get("es_diabetico", False),
-                es_fumador=row.get("es_fumador", False),
-                riesgo=row["riesgo"],
+        total_upserted = 0
+        for _, row in df.iterrows():
+            documento = str(row["documento"]) if pd.notna(row["documento"]) else None
+            
+            # Usar update_or_create para manejar modificaciones de datos si el documento ya existe
+            obj, created = Patient.objects.update_or_create(
+                documento=documento,
+                defaults={
+                    "nombres": row["nombres"],
+                    "apellidos": row["apellidos"],
+                    "edad": int(row["edad"]),
+                    "sexo": row["sexo"],
+                    "peso": float(row["peso"]),
+                    "altura": float(row["altura"]),
+                    "imc": float(row["imc"]),
+                    "glucosa": float(row["glucosa"]),
+                    "colesterol": float(row["colesterol"]),
+                    "presion_sistolica": int(row.get("presion_sistolica", 120)),
+                    "presion_diastolica": int(row.get("presion_diastolica", 80)),
+                    "saturacion_oxigeno": float(row.get("saturacion_oxigeno", 95)),
+                    "frecuencia_cardiaca": int(row.get("frecuencia_cardiaca", 75)),
+                    "diagnostico": row["diagnostico"],
+                    "es_hipertenso": row.get("es_hipertenso", False),
+                    "es_diabetico": row.get("es_diabetico", False),
+                    "es_fumador": row.get("es_fumador", False),
+                    "riesgo": row["riesgo"],
+                }
             )
-            for _, row in df.iterrows()
-        ]
+            total_upserted += 1
 
-        created = Patient.objects.bulk_create(patients)
-        return len(created)
+        return total_upserted
+
+    @staticmethod
+    def reset_all_data():
+        """Elimina todos los pacientes de la base de datos."""
+        from .models import UploadedDataset
+        Patient.objects.all().delete()
+        UploadedDataset.objects.all().delete()
+        return True
 
     @classmethod
     def _validate_columns(cls, df):

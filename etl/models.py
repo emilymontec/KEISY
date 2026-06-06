@@ -23,6 +23,7 @@ class UploadedDataset(models.Model):
     )
     notes = models.TextField(blank=True)
     execution_time = models.FloatField(default=0.0) # Segundos
+    file_hash = models.CharField(max_length=64, blank=True, null=True) # SHA-256
     uploaded_at = models.DateTimeField(auto_now_add=True)
     processed_at = models.DateTimeField(null=True, blank=True)
 

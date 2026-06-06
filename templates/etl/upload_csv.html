@@ -42,14 +42,31 @@
             
             {% if messages %}
                 {% for message in messages %}
-                    <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %} alert-dismissible fade show rounded-4 mb-4 border-0 shadow-sm" role="alert">
+                    <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'warning' %}alert-warning{% elif message.tags == 'info' %}alert-info{% else %}alert-danger{% endif %} alert-dismissible fade show rounded-4 mb-4 border-0 shadow-sm" role="alert">
                         <span class="fw-bold">{{ message }}</span>
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 {% endfor %}
             {% endif %}
 
-            <form method="POST" enctype="multipart/form-data" id="upload-form">
+            {% if pending_file %}
+                <div class="card bg-light border-0 rounded-4 p-4 mb-4">
+                    <h6 class="fw-bold text-primary-dark mb-3"><i class="bi bi-question-circle-fill me-2"></i>¿Deseas volver a cargar este archivo?</h6>
+                    <p class="text-muted small">El archivo <strong>{{ pending_file }}</strong> ya existe en el sistema. Al cargarlo de nuevo, se actualizarán los datos de los pacientes que hayan cambiado.</p>
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="hidden" name="confirm_upload" value="true">
+                        <input type="hidden" name="pending_filename" value="{{ pending_file }}">
+                        <input type="hidden" name="file_hash" value="{{ file_hash }}">
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary-custom px-4">Sí, confirmar y actualizar</button>
+                            <a href="{% url 'upload_csv' %}" class="btn btn-outline-secondary rounded-3 px-4">No, cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            {% endif %}
+
+            <form method="POST" enctype="multipart/form-data" id="upload-form" {% if pending_file %}class="d-none"{% endif %}>
                 {% csrf_token %}
                 <div id="dropzone" class="dropzone mb-4 transition-hover">
                     <div class="display-4 mb-3 text-primary-light"><i class="bi bi-file-earmark-plus"></i></div>
@@ -67,6 +84,9 @@
                     </button>
                     <button type="submit" name="generate_simulated" class="btn btn-outline-primary rounded-3 px-4 fw-bold">
                         Simular Datos de Prueba
+                    </button>
+                    <button type="button" class="btn btn-outline-danger rounded-3 px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#resetDataModal">
+                        Restablecer Datos
                     </button>
                     <a href="{% url 'home' %}" class="btn btn-outline-secondary rounded-3 px-4 d-flex align-items-center fw-bold">
                         Cancelar
@@ -90,6 +110,26 @@
         <div class="card-custom bg-light border-0">
             <h6 class="fw-bold mb-2 text-primary-dark small text-uppercase">Soporte Técnico</h6>
             <p class="text-muted small mb-0">Si experimentas problemas con el formato del archivo, contacta al administrador del sistema.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación de Restablecimiento -->
+<div class="modal fade" id="resetDataModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow">
+            <div class="modal-body p-5 text-center">
+                <div class="display-1 text-danger mb-4"><i class="bi bi-exclamation-triangle"></i></div>
+                <h4 class="fw-bold text-primary-dark mb-3">¿Estás seguro?</h4>
+                <p class="text-muted mb-4">Esta acción eliminará <strong>todos los pacientes</strong> y el historial de carga. Esta operación no se puede deshacer.</p>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2">
+                        <button type="submit" name="reset_data" class="btn btn-danger rounded-3 py-3 fw-bold">Sí, eliminar todo definitivamente</button>
+                        <button type="button" class="btn btn-outline-secondary rounded-3 py-3 fw-bold" data-bs-dismiss="modal">No, cancelar</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
