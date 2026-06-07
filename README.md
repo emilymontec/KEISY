@@ -296,8 +296,8 @@ python manage.py runserver
 ## Supported File Formats
 | | |
 | :--- | --- |
-| Import | CSV, XLSX, JSON, ZIP (containing CSV/XLSX) |
-| Export | CSV, XLSX, PDF, JSON, ZIP |
+| **Import** | CSV, XLSX, JSON, ZIP (containing CSV/XLSX) |
+| **Export** | CSV, XLSX, PDF, JSON, ZIP |
 
 ---
 
