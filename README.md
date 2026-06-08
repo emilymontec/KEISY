@@ -21,11 +21,15 @@ KEISY is a web system that enables the centralization of data from multiple medi
 
 The solution is aimed at healthcare providers, clinics, hospitals, and organizations that need to transform large volumes of clinical data into strategic information for healthcare risk management.
 
+<div align="center">
+
 | | |
 |---|---|
 | - Centralize information from multiple sources. | - Automate ETL (extract, transform, load) processes. |
 | - Improve the quality of clinical data. | - Detect inconsistent and duplicate records. |
 | - Generate interactive dashboards. | - Implement predictive machine learning models. |
+
+</div>
 
 ![dashboard](file_docs/dashboard.jpeg)
 
@@ -42,7 +46,7 @@ KEISY's primary objective is to integrate, clean, transform, analyze, and visual
 
 <table>
 <tr>
-<td width="30%" valign="top">
+<td width="33%" valign="top">
 
 <h3>⛏️ Extract</h3>
 
@@ -56,7 +60,7 @@ Features:
 * Process traceability.
 
 </td>
-<td width="30%" valign="top">
+<td width="33%" valign="top">
 
 <h3>🛠️ Transform</h3>
 
@@ -70,7 +74,7 @@ Functions:
 * Standardization of clinical variables.
 
 </td>
-<td width="30%" valign="top">
+<td width="33%" valign="top">
 
 <h3>🔄 Load</h3>
 
@@ -123,7 +127,7 @@ Turns clinical data into strategic insights.
 
 <table>
 <tr>
-<td width="30%" valign="top">
+<td width="33%" valign="top">
 
 <h3>Descriptive Statistics</h3>
 
@@ -135,7 +139,7 @@ Automatic calculation of:
 * Distributions.
 
 </td>
-<td width="30%" valign="top">
+<td width="33%" valign="top">
 
 <h3>Clinical KPIs</h3>
 
@@ -148,7 +152,7 @@ Institutional indicators:
 * Distribution by age group.
 
 </td>
-<td width="30%" valign="top">
+<td width="33%" valign="top">
 
 <h3>Segmentation</h3>
 
@@ -256,6 +260,19 @@ Generates automatic alerts for high-risk patients.
 
 ---
 
+## Tools Used
+
+<img src="https://img.shields.io/badge/Django-+6.0-044b99?style=flat-square"> <img src="https://img.shields.io/badge/Pandas-+3.0-dc4395?style=flat-square"> <img src="https://img.shields.io/badge/NumPy-+2.4-0697ac?style=flat-square"> <img src="https://img.shields.io/badge/ScikitLearn-+1.8-044b99?style=flat-square"> <img src="https://img.shields.io/badge/HTML-5-dc4395?style=flat-square"> <img src="https://img.shields.io/badge/CSS-3-0697ac?style=flat-square"> <img src="https://img.shields.io/badge/Bootstrap-26-044b99?style=flat-square"> <img src="https://img.shields.io/badge/Supabase-PostgreSQL-dc4395?style=flat-square">
+
+---
+
+## System Architecture
+```bash
+keisy → Frontend → ETL → Database → ML → Dashboard
+```
+
+---
+
 ## Quick install
 ```bash
 git clone https://github.com/emilymontec/keisy.git; cd keisy
@@ -290,6 +307,44 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 <sub> Application available at: http://127.0.0.1:8000 </sub>
+
+---
+
+## File Structure
+```bash
+keisy/
+│
+├── keisy/
+│   ├── settings.py
+│   ├── urls.py
+│   ├── wsgi.py
+│   └── asgi.py
+│
+├── analytics/
+├── authentication/
+├── dashboard/
+├── datasets/
+├── etl/
+├── ml/
+├── patients/
+├── reports/
+│
+├── static/
+├── templates/
+│   ├── admin/
+│   ├── analytics/
+│   ├── authentication/
+│   ├── dashboard/
+│   ├── etl/
+│   ├── ml/
+│   ├── patients/
+│   └── base.html
+│
+├── manage.py
+├── requirements.txt
+├── .env
+└── README.md
+```
 
 ---
 
