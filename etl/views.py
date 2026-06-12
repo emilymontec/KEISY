@@ -33,38 +33,7 @@ def upload_csv(request):
             messages.success(request, "Todos los datos clínicos y registros de carga han sido eliminados.")
             return redirect("upload_csv")
 
-        if "generate_simulated" in request.POST:
-            try:
-                df = ETLService.generate_simulated_dataset()
-                # Para simular la carga, lo guardamos temporalmente
-                datasets_dir = Path("datasets")
-                datasets_dir.mkdir(parents=True, exist_ok=True)
-                file_path = datasets_dir / "simulated_dataset.csv"
-                df.to_csv(file_path, index=False)
-                
-                upload_record = UploadedDataset.objects.create(
-                    user=request.user,
-                    file_name="simulated_dataset.csv",
-                    stored_path=str(file_path),
-                    rows_received=len(df)
-                )
-                
-                df_transformed, etl_logs = ETLService.transform(df)
-                total = ETLService.load(df_transformed)
-                
-                execution_time = round(time.time() - start_time, 2)
-                notes = f"Simulado. Duplicados: {etl_logs['duplicates_removed']}, Imputados: {etl_logs['nulls_imputed']}"
-                upload_record.mark_processed(
-                    rows_processed=len(df_transformed),
-                    rows_inserted=total,
-                    execution_time=execution_time,
-                    notes=notes,
-                )
-                messages.success(request, f"Simulado: {total} registros (Limpieza: {etl_logs['duplicates_removed']} dupl. eliminados).")
-            except Exception as exc:
-                execution_time = round(time.time() - start_time, 2)
-                messages.error(request, f"Error al generar dataset: {str(exc)}")
-            return redirect("upload_csv")
+
 
         # Manejo de confirmación de archivo repetido
         is_confirmed = request.POST.get("confirm_upload") == "true"
@@ -106,6 +75,11 @@ def upload_csv(request):
                 return render(request, "etl/upload_csv.html", context)
 
         # Si llegamos aquí, es una carga nueva o confirmada
+        # Primero, verificar que el archivo existe (importante para el caso confirmado)
+        if not file_path.exists():
+            messages.error(request, f"Archivo '{file_path.name}' no encontrado en el servidor. Por favor, súbelo nuevamente.")
+            return redirect("upload_csv")
+            
         upload_record = UploadedDataset.objects.create(
             user=request.user,
             file_name=file_path.name,

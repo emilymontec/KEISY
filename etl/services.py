@@ -66,6 +66,9 @@ class ETLService:
 
         # 1. Normalizar nombres de columnas (quitar acentos, espacios, lowercase)
         df.columns = [cls._clean_column_name(col) for col in df.columns]
+        
+        # 0. Validar que existan las columnas requeridas
+        cls._validate_columns(df)
 
         # 2. Renombrado específico solicitado
         rename_map = {
@@ -180,34 +183,41 @@ class ETLService:
     @staticmethod
     def load(df):
         total_upserted = 0
-        for _, row in df.iterrows():
-            documento = str(row["documento"]) if pd.notna(row["documento"]) else None
-            
-            # Usar update_or_create para manejar modificaciones de datos si el documento ya existe
-            obj, created = Patient.objects.update_or_create(
-                documento=documento,
-                defaults={
-                    "nombres": row["nombres"],
-                    "apellidos": row["apellidos"],
-                    "edad": int(row["edad"]),
-                    "sexo": row["sexo"],
-                    "peso": float(row["peso"]),
-                    "altura": float(row["altura"]),
-                    "imc": float(row["imc"]),
-                    "glucosa": float(row["glucosa"]),
-                    "colesterol": float(row["colesterol"]),
-                    "presion_sistolica": int(row.get("presion_sistolica", 120)),
-                    "presion_diastolica": int(row.get("presion_diastolica", 80)),
-                    "saturacion_oxigeno": float(row.get("saturacion_oxigeno", 95)),
-                    "frecuencia_cardiaca": int(row.get("frecuencia_cardiaca", 75)),
-                    "diagnostico": row["diagnostico"],
-                    "es_hipertenso": row.get("es_hipertenso", False),
-                    "es_diabetico": row.get("es_diabetico", False),
-                    "es_fumador": row.get("es_fumador", False),
-                    "riesgo": row["riesgo"],
-                }
-            )
-            total_upserted += 1
+        errors = []
+        for idx, row in df.iterrows():
+            try:
+                documento = str(row["documento"]) if pd.notna(row["documento"]) else None
+                
+                # Usar update_or_create para manejar modificaciones de datos si el documento ya existe
+                obj, created = Patient.objects.update_or_create(
+                    documento=documento,
+                    defaults={
+                        "nombres": str(row["nombres"]) if pd.notna(row["nombres"]) else "",
+                        "apellidos": str(row["apellidos"]) if pd.notna(row["apellidos"]) else "",
+                        "edad": int(float(row["edad"])) if pd.notna(row["edad"]) else 0,
+                        "sexo": str(row["sexo"]) if pd.notna(row["sexo"]) else "M",
+                        "peso": float(row["peso"]) if pd.notna(row["peso"]) else 70.0,
+                        "altura": float(row["altura"]) if pd.notna(row["altura"]) else 1.70,
+                        "imc": float(row["imc"]) if pd.notna(row["imc"]) else 24.0,
+                        "glucosa": float(row["glucosa"]) if pd.notna(row["glucosa"]) else 100.0,
+                        "colesterol": float(row["colesterol"]) if pd.notna(row["colesterol"]) else 200.0,
+                        "presion_sistolica": int(float(row.get("presion_sistolica", 120))) if pd.notna(row.get("presion_sistolica", 120)) else 120,
+                        "presion_diastolica": int(float(row.get("presion_diastolica", 80))) if pd.notna(row.get("presion_diastolica", 80)) else 80,
+                        "saturacion_oxigeno": float(row.get("saturacion_oxigeno", 95)) if pd.notna(row.get("saturacion_oxigeno", 95)) else 95.0,
+                        "frecuencia_cardiaca": int(float(row.get("frecuencia_cardiaca", 75))) if pd.notna(row.get("frecuencia_cardiaca", 75)) else 75,
+                        "diagnostico": str(row["diagnostico"]) if pd.notna(row["diagnostico"]) else "Pendiente de evaluación",
+                        "es_hipertenso": bool(row.get("es_hipertenso", False)) if pd.notna(row.get("es_hipertenso", False)) else False,
+                        "es_diabetico": bool(row.get("es_diabetico", False)) if pd.notna(row.get("es_diabetico", False)) else False,
+                        "es_fumador": bool(row.get("es_fumador", False)) if pd.notna(row.get("es_fumador", False)) else False,
+                        "riesgo": str(row["riesgo"]) if pd.notna(row["riesgo"]) else "BAJO",
+                    }
+                )
+                total_upserted += 1
+            except Exception as e:
+                errors.append(f"Fila {idx+2}: {str(e)}")
+        
+        if errors:
+            raise ValueError(f"Errores al cargar datos: {'; '.join(errors)}")
 
         return total_upserted
 
