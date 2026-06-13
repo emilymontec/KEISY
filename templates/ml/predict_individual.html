@@ -108,6 +108,19 @@
                     </div>
                 </div>
 
+                {% if inputs %}
+                <div class="text-start p-3 rounded-4 bg-light mb-3">
+                    <h6 class="fw-bold text-primary-dark small mb-2"><i class="bi bi-list-check me-2"></i>Valores Ingresados:</h6>
+                    <div class="row g-2">
+                        <div class="col-6 small text-muted">Edad: <strong class="text-dark">{{ inputs.edad }} años</strong></div>
+                        <div class="col-6 small text-muted">Glucosa: <strong class="text-dark">{{ inputs.glucosa }} mg/dL</strong></div>
+                        <div class="col-6 small text-muted">Peso: <strong class="text-dark">{{ inputs.peso }} kg</strong></div>
+                        <div class="col-6 small text-muted">Altura: <strong class="text-dark">{{ inputs.altura }} m</strong></div>
+                        <div class="col-12 small text-muted">Presión Sistólica: <strong class="text-dark">{{ inputs.presion }} mmHg</strong></div>
+                    </div>
+                </div>
+                {% endif %}
+
                 {% if result.factores %}
                 <div class="text-start p-3 rounded-4 bg-light">
                     <h6 class="fw-bold text-primary-dark small mb-3"><i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>Factores de Riesgo Detectados:</h6>

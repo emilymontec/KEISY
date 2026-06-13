@@ -41,20 +41,6 @@
                     <span class="badge px-3 py-2 rounded-3 fw-medium" style="color: #00abbd !important; background: #ebf6f9;">{{ training.model_type }}</span>
                 </div>
                 <p class="mb-1"><strong>Entrenado:</strong> {{ training.training_date|date:"d/m/Y H:i" }}</p>
-                <p class="mb-1"><strong>Accuracy:</strong> {{ training.accuracy|floatformat:2 }} 
-                    {% if training.accuracy >= 0.80 %}
-                        <span class="badge bg-success bg-opacity-10 text-success ms-1 small"><i class="bi bi-check-circle"></i> Cumple</span>
-                    {% else %}
-                        <span class="badge bg-danger bg-opacity-10 text-danger ms-1 small"><i class="bi bi-x-circle"></i> No cumple</span>
-                    {% endif %}
-                </p>
-                <p class="mb-1"><strong>Recall:</strong> {{ training.recall_macro|floatformat:2 }} 
-                    {% if training.recall_macro >= 0.60 %}
-                        <span class="badge bg-success bg-opacity-10 text-success ms-1 small"><i class="bi bi-check-circle"></i> Cumple</span>
-                    {% else %}
-                        <span class="badge bg-danger bg-opacity-10 text-danger ms-1 small"><i class="bi bi-x-circle"></i> No cumple</span>
-                    {% endif %}
-                </p>
                 <p class="mb-1"><strong>Registros totales:</strong> {{ training.total_records }}</p>
                 <p class="mb-1"><strong>Set de entrenamiento:</strong> {{ training.training_records }}</p>
                 <p class="mb-2"><strong>Set de prueba:</strong> {{ training.test_records }}</p>
@@ -71,7 +57,7 @@
             {% if training %}
                 <div class="row g-3">
                     <div class="col-6 col-md-3">
-                        <div class="text-center p-3 bg-light rounded-3 h-100 d-flex flex-column justify-content-between">
+                        <div class="text-center p-3 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: #fff; border: none;">
                             <div>
                                 <div class="display-5 fw-bold text-primary-dark">{{ training.accuracy|floatformat:2 }}</div>
                                 <div class="small text-muted fw-bold">Accuracy</div>
@@ -86,18 +72,22 @@
                         </div>
                     </div>
                     <div class="col-6 col-md-3">
-                        <div class="text-center p-3 bg-light rounded-3 h-100 d-flex flex-column justify-content-between">
+                        <div class="text-center p-3 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: #fff; border: none;">
                             <div>
                                 <div class="display-5 fw-bold text-primary-medium">{{ training.precision_macro|floatformat:2 }}</div>
                                 <div class="small text-muted fw-bold">Precision</div>
                             </div>
                             <div class="mt-2">
-                                <span class="badge bg-secondary bg-opacity-10 text-secondary w-100 py-1">-</span>
+                                {% if training.precision_macro >= 0.70 %}
+                                    <span class="badge bg-success bg-opacity-10 text-success w-100 py-1"><i class="bi bi-check-circle me-1"></i>Min: 0.70</span>
+                                {% else %}
+                                    <span class="badge bg-danger bg-opacity-10 text-danger w-100 py-1"><i class="bi bi-x-circle me-1"></i>Min: 0.70</span>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
                     <div class="col-6 col-md-3">
-                        <div class="text-center p-3 bg-light rounded-3 h-100 d-flex flex-column justify-content-between">
+                        <div class="text-center p-3 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: #fff; border: none;">
                             <div>
                                 <div class="display-5 fw-bold text-accent-pink">{{ training.recall_macro|floatformat:2 }}</div>
                                 <div class="small text-muted fw-bold">Recall</div>
@@ -112,13 +102,17 @@
                         </div>
                     </div>
                     <div class="col-6 col-md-3">
-                        <div class="text-center p-3 bg-light rounded-3 h-100 d-flex flex-column justify-content-between">
+                        <div class="text-center p-3 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: #fff; border: none;">
                             <div>
                                 <div class="display-5 fw-bold text-primary-light">{{ training.f1_macro|floatformat:2 }}</div>
                                 <div class="small text-muted fw-bold">F1-Score</div>
                             </div>
                             <div class="mt-2">
-                                <span class="badge bg-secondary bg-opacity-10 text-secondary w-100 py-1">-</span>
+                                {% if training.f1_macro >= 0.60 %}
+                                    <span class="badge bg-success bg-opacity-10 text-success w-100 py-1"><i class="bi bi-check-circle me-1"></i>Min: 0.60</span>
+                                {% else %}
+                                    <span class="badge bg-danger bg-opacity-10 text-danger w-100 py-1"><i class="bi bi-x-circle me-1"></i>Min: 0.60</span>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -139,7 +133,7 @@
                 <ul class="list-unstyled">
                     {% for feature in features %}
                         <li class="mb-2">
-                            <span class="badge bg-light text-primary-dark rounded-pill px-3 py-2"><i class="bi bi-check-circle me-1"></i>{{ feature }}</span>
+                            <span class="badge rounded-pill px-3 py-2" style="background-color: rgb(247 251 255) !important; color: #08306b;"><i class="bi bi-check-circle me-1"></i>{{ feature }}</span>
                         </li>
                     {% endfor %}
                 </ul>
@@ -173,6 +167,7 @@
                 <thead>
                     <tr>
                         <th>Paciente</th>
+                        <th>Variables de Entrada</th>
                         <th>Riesgo Predicho</th>
                         <th>Riesgo Real</th>
                         <th>Probabilidad</th>
@@ -188,6 +183,17 @@
                                 {% else %}
                                     <span class="text-muted"><em>Predicción Individual</em></span>
                                 {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex flex-wrap gap-1" style="max-width: 320px;">
+                                    {% for key, val in pred.input_data.items %}
+                                        <span class="badge rounded-pill px-2 py-1" style="font-size: 0.72rem; font-weight: normal; background-color: rgb(247 251 255) !important; color: #08306b;">
+                                            {{ key|title }}: {{ val }}
+                                        </span>
+                                    {% empty %}
+                                        <span class="text-muted">-</span>
+                                    {% endfor %}
+                                </div>
                             </td>
                             <td>
                                 {% if pred.predicted_risk == 'CRITICO' %}

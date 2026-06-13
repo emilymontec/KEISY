@@ -33,6 +33,7 @@ def ml_dashboard(request):
 def predict_individual(request):
     result = None
     error = None
+    inputs = None
 
     if request.method == "POST":
         try:
@@ -42,13 +43,21 @@ def predict_individual(request):
             glucose = float(request.POST.get("glucosa"))
             pressure = int(request.POST.get("presion"))
 
+            inputs = {
+                "edad": age,
+                "peso": weight,
+                "altura": height,
+                "glucosa": glucose,
+                "presion": pressure
+            }
+
             result, error = MLService.predict_risk(age, weight, height, glucose, pressure)
             if error:
                 messages.error(request, error)
         except (ValueError, TypeError):
             messages.error(request, "Por favor, ingresa valores válidos en todos los campos.")
 
-    return render(request, "ml/predict_individual.html", {"result": result})
+    return render(request, "ml/predict_individual.html", {"result": result, "inputs": inputs})
 
 
 @login_required
