@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+
+{% block title %}Machine Learning - Keisy Medical{% endblock %}
+
+{% block content %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-primary-dark mb-0">Machine Learning</h2>
+        <p class="text-muted mb-0">Monitor del modelo predictivo de riesgo cardiovascular</p>
+    </div>
+    <div class="d-flex gap-2">
+        <form method="POST" action="{% url 'train_model' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary-custom">
+                <i class="bi bi-arrow-repeat me-2"></i>Re-entrenar Modelo
+            </button>
+        </form>
+        <a href="{% url 'predict_individual' %}" class="btn btn-outline-secondary rounded-3 fw-bold">
+            <i class="bi bi-person-add me-2"></i>Predicción Individual
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Model Info -->
+    <div class="col-12 col-md-4">
+        <div class="card-custom h-100">
+            <h5 class="fw-bold text-bs-dark mb-3"><i class="bi bi-cpu me-2"></i>Modelo</h5>
+            {% if training %}
+                <div class="mb-3">
+                    <span class="badge px-3 py-2 rounded-3 fw-medium" style="color: #00abbd !important; background: #ebf6f9;">{{ training.model_type }}</span>
+                </div>
+                <p class="mb-1"><strong>Entrenado:</strong> {{ training.training_date|date:"d/m/Y H:i" }}</p>
+                <p class="mb-1"><strong>Accuracy:</strong> {{ training.accuracy|floatformat:2 }} 
+                    {% if training.accuracy >= 0.80 %}
+                        <span class="badge bg-success bg-opacity-10 text-success ms-1 small"><i class="bi bi-check-circle"></i> Cumple</span>
+                    {% else %}
+                        <span class="badge bg-danger bg-opacity-10 text-danger ms-1 small"><i class="bi bi-x-circle"></i> No cumple</span>
+                    {% endif %}
+                </p>
+                <p class="mb-1"><strong>Recall:</strong> {{ training.recall_macro|floatformat:2 }} 
+                    {% if training.recall_macro >= 0.60 %}
+                        <span class="badge bg-success bg-opacity-10 text-success ms-1 small"><i class="bi bi-check-circle"></i> Cumple</span>
+                    {% else %}
+                        <span class="badge bg-danger bg-opacity-10 text-danger ms-1 small"><i class="bi bi-x-circle"></i> No cumple</span>
+                    {% endif %}
+                </p>
+                <p class="mb-1"><strong>Registros totales:</strong> {{ training.total_records }}</p>
+                <p class="mb-1"><strong>Set de entrenamiento:</strong> {{ training.training_records }}</p>
+                <p class="mb-2"><strong>Set de prueba:</strong> {{ training.test_records }}</p>
+            {% else %}
+                <p class="text-muted">No hay un modelo entrenado. Entrena el modelo primero!</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Metrics -->
+    <div class="col-12 col-md-8">
+        <div class="card-custom h-100">
+            <h5 class="fw-bold text-primary-dark mb-3"><i class="bi bi-graph-up me-2"></i>Métricas</h5>
+            {% if training %}
+                <div class="row g-3">
+                    <div class="col-6 col-md-3">
+                        <div class="text-center p-3 bg-light rounded-3 h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="display-5 fw-bold text-primary-dark">{{ training.accuracy|floatformat:2 }}</div>
+                                <div class="small text-muted fw-bold">Accuracy</div>
+                            </div>
+                            <div class="mt-2">
+                                {% if training.accuracy >= 0.80 %}
+                                    <span class="badge bg-success bg-opacity-10 text-success w-100 py-1"><i class="bi bi-check-circle me-1"></i>Min: 0.80</span>
+                                {% else %}
+                                    <span class="badge bg-danger bg-opacity-10 text-danger w-100 py-1"><i class="bi bi-x-circle me-1"></i>Min: 0.80</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="text-center p-3 bg-light rounded-3 h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="display-5 fw-bold text-primary-medium">{{ training.precision_macro|floatformat:2 }}</div>
+                                <div class="small text-muted fw-bold">Precision</div>
+                            </div>
+                            <div class="mt-2">
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary w-100 py-1">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="text-center p-3 bg-light rounded-3 h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="display-5 fw-bold text-accent-pink">{{ training.recall_macro|floatformat:2 }}</div>
+                                <div class="small text-muted fw-bold">Recall</div>
+                            </div>
+                            <div class="mt-2">
+                                {% if training.recall_macro >= 0.60 %}
+                                    <span class="badge bg-success bg-opacity-10 text-success w-100 py-1"><i class="bi bi-check-circle me-1"></i>Min: 0.60</span>
+                                {% else %}
+                                    <span class="badge bg-danger bg-opacity-10 text-danger w-100 py-1"><i class="bi bi-x-circle me-1"></i>Min: 0.60</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="text-center p-3 bg-light rounded-3 h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="display-5 fw-bold text-primary-light">{{ training.f1_macro|floatformat:2 }}</div>
+                                <div class="small text-muted fw-bold">F1-Score</div>
+                            </div>
+                            <div class="mt-2">
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary w-100 py-1">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <p class="text-muted">Sin métricas disponibles</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Variables -->
+    <div class="col-12 col-md-4">
+        <div class="card-custom h-100">
+            <h5 class="fw-bold text-primary-dark mb-3"><i class="bi bi-list-check me-2"></i>Variables de Entrada</h5>
+            {% if features %}
+                <ul class="list-unstyled">
+                    {% for feature in features %}
+                        <li class="mb-2">
+                            <span class="badge bg-light text-primary-dark rounded-pill px-3 py-2"><i class="bi bi-check-circle me-1"></i>{{ feature }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">Sin variables</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Confusion Matrix -->
+    <div class="col-12 col-md-8">
+        <div class="card-custom h-100">
+            <h5 class="fw-bold text-primary-dark mb-3"><i class="bi bi-diagram-2 me-2"></i>Matriz de Confusión</h5>
+            {% if training and training.confusion_matrix_image %}
+                <div class="text-center">
+                    <img src="data:image/png;base64,{{ training.confusion_matrix_image }}" alt="Matriz de Confusión" class="img-fluid rounded-3">
+                </div>
+            {% else %}
+                <p class="text-muted text-center">Matriz no disponible</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Recent Predictions -->
+<div class="card-custom">
+    <h5 class="fw-bold text-primary-dark mb-3"><i class="bi bi-clock-history me-2"></i>Predicciones Recientes</h5>
+    {% if predictions %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Paciente</th>
+                        <th>Riesgo Predicho</th>
+                        <th>Riesgo Real</th>
+                        <th>Probabilidad</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pred in predictions %}
+                        <tr>
+                            <td>
+                                {% if pred.patient %}
+                                    {{ pred.patient.nombres }} {{ pred.patient.apellidos }}
+                                {% else %}
+                                    <span class="text-muted"><em>Predicción Individual</em></span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if pred.predicted_risk == 'CRITICO' %}
+                                    <span class="badge bg-danger text-white rounded-pill">{{ pred.predicted_risk }}</span>
+                                {% elif pred.predicted_risk == 'ALTO' %}
+                                    <span class="badge bg-warning text-dark rounded-pill">{{ pred.predicted_risk }}</span>
+                                {% elif pred.predicted_risk == 'MEDIO' %}
+                                    <span class="badge bg-info text-dark rounded-pill">{{ pred.predicted_risk }}</span>
+                                {% else %}
+                                    <span class="badge bg-success text-white rounded-pill">{{ pred.predicted_risk }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if pred.actual_risk %}
+                                    {% if pred.actual_risk == 'CRITICO' %}
+                                        <span class="badge bg-danger text-white rounded-pill">{{ pred.actual_risk }}</span>
+                                    {% elif pred.actual_risk == 'ALTO' %}
+                                        <span class="badge bg-warning text-dark rounded-pill">{{ pred.actual_risk }}</span>
+                                    {% elif pred.actual_risk == 'MEDIO' %}
+                                        <span class="badge bg-info text-dark rounded-pill">{{ pred.actual_risk }}</span>
+                                    {% else %}
+                                        <span class="badge bg-success text-white rounded-pill">{{ pred.actual_risk }}</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ pred.probability }}%</td>
+                            <td>{{ pred.prediction_date|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted">No hay predicciones registradas</p>
+    {% endif %}
+</div>
+
+{% endblock %}
