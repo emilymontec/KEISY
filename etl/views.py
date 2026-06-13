@@ -109,7 +109,7 @@ def upload_csv(request):
             )
             messages.success(
                 request,
-                f"{total} registros procesados/actualizados. (Duplicados en archivo: {etl_logs['duplicates_removed']})",
+                f"✅ Carga exitosa! {len(df)} registros recibidos → {len(df_transformed)} procesados → {total} cargados/actualizados. (Duplicados en archivo: {etl_logs['duplicates_removed']})",
             )
 
         return redirect("upload_csv")

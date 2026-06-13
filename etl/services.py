@@ -3,12 +3,47 @@ import numpy as np
 import unicodedata
 import re
 import hashlib
+import json
 from pathlib import Path
 
 from patients.models import Patient
+from django.db import transaction
 
 
 class ETLService:
+    COLUMN_ALIASES = {
+        "nombre": "nombres",
+        "nombres_paciente": "nombres",
+        "first_name": "nombres",
+        "apellido": "apellidos",
+        "last_name": "apellidos",
+        "genero": "sexo",
+        "gender": "sexo",
+        "sex": "sexo",
+        "id_paciente": "documento",
+        "patient_id": "documento",
+        "identificacion": "documento",
+        "numero_documento": "documento",
+        "num_documento": "documento",
+        "peso_kg": "peso",
+        "height": "altura",
+        "altura_m": "altura",
+        "glucose": "glucosa",
+        "cholesterol": "colesterol",
+        "systolic_pressure": "presion_sistolica",
+        "presion_arterial_sistolica": "presion_sistolica",
+        "diastolic_pressure": "presion_diastolica",
+        "presion_arterial_diastolica": "presion_diastolica",
+        "spo2": "saturacion_oxigeno",
+        "sat_oxigeno": "saturacion_oxigeno",
+        "saturacion_de_oxigeno": "saturacion_oxigeno",
+        "heart_rate": "frecuencia_cardiaca",
+        "fc": "frecuencia_cardiaca",
+        "diagnostico_preliminar": "diagnostico",
+        "diagnosis": "diagnostico",
+        "riesgo_enfermedad": "riesgo",
+    }
+
     @staticmethod
     def calculate_hash(file_path):
         """Calcula el hash SHA-256 de un archivo."""
@@ -36,23 +71,90 @@ class ETLService:
     ]
 
     @staticmethod
+    def _read_csv(file_path):
+        read_attempts = (
+            {"sep": ",", "encoding": "utf-8-sig"},
+            {"sep": ",", "encoding": "latin1"},
+            {"sep": ";", "encoding": "utf-8-sig"},
+            {"sep": ";", "encoding": "latin1"},
+            {"sep": "\t", "encoding": "utf-8-sig"},
+            {"sep": "\t", "encoding": "latin1"},
+        )
+        last_error = None
+        for options in read_attempts:
+            try:
+                return pd.read_csv(file_path, **options)
+            except Exception as exc:
+                last_error = exc
+        raise last_error
+
+    @staticmethod
+    def _read_json(file_path):
+        try:
+            json_df = pd.read_json(file_path)
+            if isinstance(json_df, pd.DataFrame):
+                if len(json_df.columns) == 1 and json_df.columns[0] in {
+                    "records",
+                    "data",
+                    "patients",
+                    "result",
+                }:
+                    nested_records = json_df.iloc[:, 0].tolist()
+                    if nested_records and all(
+                        isinstance(record, dict) for record in nested_records
+                    ):
+                        return pd.DataFrame(nested_records)
+                    if nested_records and isinstance(nested_records[0], list):
+                        return pd.DataFrame(nested_records[0])
+                return json_df
+        except ValueError:
+            pass
+
+        with open(file_path, "r", encoding="utf-8-sig") as source:
+            payload = json.load(source)
+
+        if isinstance(payload, dict):
+            for key in ("records", "data", "patients", "result"):
+                nested_records = payload.get(key)
+                if isinstance(nested_records, list):
+                    return pd.DataFrame(nested_records)
+            return pd.DataFrame([payload])
+
+        if isinstance(payload, list):
+            return pd.DataFrame(payload)
+
+        raise ValueError("El JSON debe contener una lista de registros o un objeto con datos tabulares.")
+
+    @staticmethod
     def extract(file_path):
         ext = Path(file_path).suffix.lower()
         try:
             if ext == '.csv':
-                return pd.read_csv(file_path)
+                return ETLService._read_csv(file_path)
             elif ext == '.xlsx':
                 return pd.read_excel(file_path, engine='openpyxl')
             elif ext == '.json':
-                # Intentar leer como lista de registros primero
-                try:
-                    return pd.read_json(file_path)
-                except Exception:
-                    return pd.read_json(file_path, orient='records')
+                return ETLService._read_json(file_path)
             else:
                 raise ValueError(f"Formato de archivo no soportado: {ext}")
         except Exception as e:
             raise ValueError(f"Error al leer el archivo {ext}: {str(e)}")
+
+    @classmethod
+    def _standardize_columns(cls, df):
+        """Mapea encabezados equivalentes al esquema interno sin perder datos."""
+        df = df.copy()
+        for column in list(df.columns):
+            target_column = cls.COLUMN_ALIASES.get(column, column)
+            if target_column == column:
+                continue
+
+            if target_column in df.columns:
+                df[target_column] = df[target_column].combine_first(df[column])
+                df = df.drop(columns=[column])
+            else:
+                df = df.rename(columns={column: target_column})
+        return df
 
     @classmethod
     def transform(cls, df):
@@ -67,32 +169,18 @@ class ETLService:
         # 1. Normalizar nombres de columnas (quitar acentos, espacios, lowercase)
         df.columns = [cls._clean_column_name(col) for col in df.columns]
         
-        # 0. Validar que existan las columnas requeridas
+        # 2. Aplicar aliases de columnas
+        df = cls._standardize_columns(df)
+        
+        # 3. Validar que existan las columnas requeridas
         cls._validate_columns(df)
 
-        # 2. Renombrado específico solicitado
-        rename_map = {
-            "imc_column": "imc", # En caso de que venga como IMC (ya limpiado a imc)
-            "presion_sistolica_column": "presion_sistolica",
-            "riesgo_enfermedad": "riesgo",
-            "diagnostico_preliminar": "diagnostico",
-            "saturacion_oxigeno_column": "saturacion_oxigeno",
-            "id_paciente": "documento"
-        }
-        # Aplicar renombrado manual para casos específicos que no sigan la limpieza simple
-        df = df.rename(columns={
-            "imc": "imc", 
-            "presion_sistolica": "presion_sistolica",
-            "riesgo_enfermedad": "riesgo",
-            "diagnostico_preliminar": "diagnostico"
-        })
-
-        # 3. Eliminar duplicados
+        # 4. Eliminar duplicados
         initial_len = len(df)
         df = df.drop_duplicates().reset_index(drop=True)
         logs["duplicates_removed"] = initial_len - len(df)
 
-        # 4. Convertir tipos numéricos (coerce)
+        # 5. Convertir tipos numéricos (coerce)
         for col in cls.NUMERIC_COLUMNS:
             if col in df.columns:
                 # Contar cuántos fallarán la conversión para el log
@@ -101,7 +189,7 @@ class ETLService:
                 post_nulls = df[col].isna().sum()
                 logs["errors_coerced"] += (post_nulls - pre_nulls)
 
-        # 5. Imputar valores nulos con la mediana
+        # 6. Imputar valores nulos con la mediana
         for col in cls.NUMERIC_COLUMNS:
             if col in df.columns:
                 null_count = df[col].isna().sum()
@@ -114,7 +202,7 @@ class ETLService:
                     df[col] = df[col].fillna(median_val)
                     logs["nulls_imputed"] += null_count
 
-        # 6. Generar documento si no existe o es nulo
+        # 7. Generar documento si no existe o es nulo
         if "documento" not in df.columns:
             df["documento"] = [f"GEN-{1000000 + i}" for i in range(len(df))]
         else:
@@ -123,24 +211,31 @@ class ETLService:
             if null_docs.any():
                 df.loc[null_docs, "documento"] = [f"GEN-{2000000 + i}" for i in range(null_docs.sum())]
         
-        # 7. Recalcular IMC: peso / (altura^2)
+        # 8. Recalcular IMC: peso / (altura^2)
         # Asegurar que altura no sea 0 para evitar error
         df["altura"] = df["altura"].replace(0, 1.70)
         df["imc"] = (df["peso"] / (df["altura" ] ** 2)).round(2)
 
-        # 8. Normalizar Sexo
+        # 9. Normalizar Sexo
         if "sexo" in df.columns:
             df["sexo"] = df["sexo"].apply(cls._normalize_sex)
 
-        # 9. Corregir diagnósticos (Hipertensión)
+        # 10. Corregir diagnósticos (Hipertensión)
         if "diagnostico" in df.columns:
             df["diagnostico"] = df["diagnostico"].apply(cls._normalize_diagnosis)
         else:
             df["diagnostico"] = "Pendiente de evaluación"
 
-        # 10. Clasificar riesgo automáticamente
+        # 11. Clasificar riesgo automáticamente
         df["riesgo"] = df.apply(cls.classify_risk, axis=1)
 
+        # Convertir todos los valores de logs a tipos nativos de Python (evitar numpy.int64, etc.)
+        for key in logs:
+            if hasattr(logs[key], "item"):
+                logs[key] = logs[key].item()
+            else:
+                logs[key] = int(logs[key]) if isinstance(logs[key], (int, float)) else logs[key]
+                
         logs["transformed"] = len(df)
         print(f"ETL LOGS: {logs}") # Opcional: usar un logger real
         return df, logs
@@ -155,8 +250,8 @@ class ETLService:
         name = "".join([c for c in nfkd_form if not unicodedata.combining(c)])
         # A minúsculas y reemplazar espacios/especiales por guion bajo
         name = name.lower().strip()
-        name = re.sub(r'[^\w\s]', '', name)
-        name = re.sub(r'\s+', '_', name)
+        name = re.sub(r'[^\w]', '_', name)
+        name = re.sub(r'_+', '_', name).strip('_')
         return name
 
     @staticmethod
@@ -184,14 +279,15 @@ class ETLService:
     def load(df):
         total_upserted = 0
         errors = []
-        for idx, row in df.iterrows():
-            try:
-                documento = str(row["documento"]) if pd.notna(row["documento"]) else None
-                
-                # Usar update_or_create para manejar modificaciones de datos si el documento ya existe
-                obj, created = Patient.objects.update_or_create(
-                    documento=documento,
-                    defaults={
+        
+        with transaction.atomic():
+            existing_docs = set(Patient.objects.values_list("documento", flat=True))
+            
+            for idx, row in df.iterrows():
+                try:
+                    documento = str(row["documento"]) if pd.notna(row["documento"]) else None
+                    
+                    patient_data = {
                         "nombres": str(row["nombres"]) if pd.notna(row["nombres"]) else "",
                         "apellidos": str(row["apellidos"]) if pd.notna(row["apellidos"]) else "",
                         "edad": int(float(row["edad"])) if pd.notna(row["edad"]) else 0,
@@ -211,10 +307,16 @@ class ETLService:
                         "es_fumador": bool(row.get("es_fumador", False)) if pd.notna(row.get("es_fumador", False)) else False,
                         "riesgo": str(row["riesgo"]) if pd.notna(row["riesgo"]) else "BAJO",
                     }
-                )
-                total_upserted += 1
-            except Exception as e:
-                errors.append(f"Fila {idx+2}: {str(e)}")
+                    
+                    if documento and documento in existing_docs:
+                        Patient.objects.filter(documento=documento).update(**patient_data)
+                    else:
+                        Patient.objects.create(documento=documento, **patient_data)
+                        existing_docs.add(documento)
+                        
+                    total_upserted += 1
+                except Exception as e:
+                    errors.append(f"Fila {idx+2}: {str(e)}")
         
         if errors:
             raise ValueError(f"Errores al cargar datos: {'; '.join(errors)}")
@@ -265,46 +367,5 @@ class ETLService:
         
         return str(value).strip().capitalize()
 
-    @staticmethod
-    def generate_simulated_dataset(n_rows=50):
-        import random
-        data = []
-        nombres = ["Juan", "Maria", "Pedro", "Ana", "Luis", "Carmen", "Jose", "Elena", "Carlos", "Lucia"]
-        apellidos = ["Garcia", "Rodriguez", "Lopez", "Martinez", "Perez", "Gonzalez", "Sanchez", "Romero", "Torres", "Ruiz"]
-        diagnosticos = ["Diabetes Melitus", "Hipertension", "HTA", "Obesisad", "Asma", "Sano", "Gastritis", "Anemia"]
-        
-        for i in range(n_rows):
-            peso = random.uniform(50, 110)
-            altura = random.uniform(1.50, 1.95)
-            diag = random.choice(diagnosticos)
-            
-            # Simular signos vitales
-            presion_sis = random.randint(90, 200)
-            glucosa = random.randint(70, 350)
-            saturacion = random.randint(80, 100)
-            frecuencia = random.randint(50, 120)
-            
-            data.append({
-                "nombres": random.choice(nombres),
-                "apellidos": random.choice(apellidos),
-                "documento": f"10{random.randint(1000000, 9999999)}",
-                "edad": random.randint(18, 85),
-                "sexo": random.choice(["M", "F", "Masculino", "Femenino", "m", "f"]),
-                "peso": round(peso, 1),
-                "altura": round(altura, 2),
-                "glucosa": glucosa,
-                "colesterol": random.randint(150, 300),
-                "presion_sistolica": presion_sis,
-                "presion_diastolica": random.randint(60, 110),
-                "saturacion_oxigeno": saturacion,
-                "frecuencia_cardiaca": frecuencia,
-                "diagnostico": diag,
-                "es_hipertenso": "Hiper" in diag or presion_sis > 140 or random.random() < 0.1,
-                "es_diabetico": "Diabet" in diag or glucosa > 126 or random.random() < 0.1,
-                "es_fumador": random.random() < 0.25,
-            })
-        
-        # Agregar algunos duplicados y nulos para probar transform
-        df = pd.DataFrame(data)
-        return df
+
 
