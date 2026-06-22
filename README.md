@@ -391,6 +391,11 @@ See the [LICENSE](LICENSE) file for additional information.
 
 ---
 
+## Appendices
+See the [UserGuide](docs/MANUAL%20USUARIO%20KEISY%20MEDICAL.pdf) to learn more.
+
+---
+
 <p align="center">
   <strong>The system is not deployed.</strong>
 </p>
