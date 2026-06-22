@@ -31,7 +31,7 @@ The solution is aimed at healthcare providers, clinics, hospitals, and organizat
 
 </div>
 
-![dashboard](readme_assets/dashboard.jpeg)
+![dashboard](docs/readme_assets/dashboard.jpeg)
 
 ---
 
@@ -116,7 +116,7 @@ registration, updating, viewing, logical deletion, advanced search.
 
 <div align="center">
 
-![Patient Management](readme_assets/patient_management.jpeg)
+![Patient Management](docs/readme_assets/patient_management.jpeg)
 
 </div>
 
@@ -245,7 +245,7 @@ overall status of the population, risk distribution, progress of critically ill 
 
 <div align="center">
 
-![Smart Dashboard](readme_assets/smart_dashboard.jpeg)
+![Smart Dashboard](docs/readme_assets/smart_dashboard.jpeg)
 
 </div>
 
