@@ -394,6 +394,8 @@ See the [LICENSE](LICENSE) file for additional information.
 ## Appendices
 See the [UserGuide](docs/MANUAL%20USUARIO%20KEISY%20MEDICAL.pdf) to learn more.
 
+If you want to know more about the system, please check the [Documentation](docs/DOCUMENTACION%20TECNICA%20KEISY%20MEDICAL.pdf).
+
 ---
 
 <p align="center">
