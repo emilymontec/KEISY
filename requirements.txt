@@ -9,6 +9,7 @@ django-storages
 djangorestframework
 djangorestframework-simplejwt
 dj-database-url
+dotenv
 FastAPI
 Starlette
 Uvicorn
