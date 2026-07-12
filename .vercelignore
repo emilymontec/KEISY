@@ -1,9 +1,0 @@
-datasets/
-*.csv
-*.xlsx
-*.parquet
-*.joblib
-*.pkl
-*.ipynb
-docs/
-tests/
