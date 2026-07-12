@@ -5,6 +5,7 @@ django-cors-headers
 djangorestframework
 djangorestframework-simplejwt
 drf-spectacular
+gunicorn
 joblib
 matplotlib
 numpy
