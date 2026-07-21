@@ -1,14 +1,18 @@
 <div align="center">
 
-# KEISY
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/readme_assets/keisy-medical-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="docs/readme_assets/keisy-medical.svg">
+  <img alt="KEISY Medical Logo" src="docs/readme_assets/keisy-medical.svg" width="300">
+</picture>
 
 <p align="center">
   <strong>platform for ETL automation and advanced analytics for clinical data management</strong>
 </p>
 
 <p align="center">
-  <a href="https://keisy.onrender.com/">Quickstart</a> ·
-  <a href="https://keisy.onrender.com/analytics/">Dashboard</a>
+  <a href="https://keisy.onrender.com/upload">Quickstart</a> ·
+  <a href="https://keisy.onrender.com/">Dashboard</a>
 </p>
 
 <img src="https://img.shields.io/badge/backend-django-044b99?style=flat-square">
