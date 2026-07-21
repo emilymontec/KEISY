@@ -11,8 +11,8 @@
 </p>
 
 <p align="center">
-  <a href="https://keisy.onrender.com/upload">Quickstart</a> ·
-  <a href="https://keisy.onrender.com/">Dashboard</a>
+  <a href="https://keisy-medical.onrender.com/upload">Quickstart</a> ·
+  <a href="https://keisy-medical.onrender.com/">Dashboard</a>
 </p>
 
 <img src="https://img.shields.io/badge/backend-django-044b99?style=flat-square">
@@ -21,7 +21,7 @@
 
 </div>
 
-KEISY is a web system that enables the centralization of data from multiple medical sources, the correction of inconsistencies, the standardization of clinical records, the generation of health indicators, and the execution of predictive models that support medical and administrative decision-making.
+KEISY MEDICAL is a web system that enables the centralization of data from multiple medical sources, the correction of inconsistencies, the standardization of clinical records, the generation of health indicators, and the execution of predictive models that support medical and administrative decision-making.
 
 The solution is aimed at healthcare providers, clinics, hospitals, and organizations that need to transform large volumes of clinical data into strategic information for healthcare risk management.
 
@@ -279,7 +279,7 @@ keisy → Frontend → ETL → Database → ML → Dashboard
 
 ## Quick install
 ```bash
-git clone https://github.com/emilymontec/keisy.git; cd keisy
+git clone https://github.com/emilymontec/keisy-medical.git; cd keisy
 ```
 <sub> clone the repository </sub>
 
@@ -316,7 +316,7 @@ python manage.py runserver
 
 ## File Structure
 ```bash
-keisy/
+keisy-medical/
 │
 ├── keisy/
 │   ├── settings.py
