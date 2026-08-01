@@ -21,9 +21,11 @@
 
 </div>
 
+<p align="justify">
 KEISY MEDICAL is a web system that enables the centralization of data from multiple medical sources, the correction of inconsistencies, the standardization of clinical records, the generation of health indicators, and the execution of predictive models that support medical and administrative decision-making.
 
 The solution is aimed at healthcare providers, clinics, hospitals, and organizations that need to transform large volumes of clinical data into strategic information for healthcare risk management.
+</p>
 
 <div align="center">
 
@@ -40,8 +42,9 @@ The solution is aimed at healthcare providers, clinics, hospitals, and organizat
 ---
 
 ## Objective
-
+<p align="justify">
 KEISY's primary objective is to integrate, clean, transform, analyze, and visualize clinical data in order to identify medical risk factors and generate predictions that support clinical and administrative decision-making.
+</p>
 
 ---
 
@@ -70,7 +73,7 @@ Features:
 
 Performs data cleansing and standardization.
 
-Functions:
+Features:
 * Data Quality.
 * Anomaly detection.
 * Normalization
@@ -129,6 +132,8 @@ registration, updating, viewing, logical deletion, advanced search.
 ## Data Analytics Module
 Turns clinical data into strategic insights.
 
+<div align="center">
+
 <table>
 <tr>
 <td width="33%" valign="top">
@@ -170,6 +175,9 @@ Classification of patients by:
 </td>
 </tr>
 </table>
+
+</div>
+
 
 ---
 
@@ -258,9 +266,28 @@ overall status of the population, risk distribution, progress of critically ill 
 ## Alert System
 Generates automatic alerts for high-risk patients.
 
-| Type | Features |
-| :--- | --- |
-| critical alerts, preventive alerts, operational alerts | prioritization by severity, clinical follow-up, administrative notifications |
+<div align="center">
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+<h4>Type</h4>
+
+critical alerts, preventive alerts, operational alerts
+
+</td>
+<td width="50%" valign="top">
+
+<h4>Features</h4>
+
+prioritization by severity, clinical follow-up, administrative notifications
+
+</td>
+</tr>
+</table>
+
+</div>
 
 ---
 
